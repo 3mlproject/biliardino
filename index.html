@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>TORNEO DI BILIARDINO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f1f5e3; margin: 0; padding: 0; }
+    header { background-color: #0e7546; color: white; text-align: center; padding: 1.5rem 0; font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; letter-spacing: 2px; }
+    .container { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
+    #matches-container, .standings { flex: 1; background: #fff; border-radius: 8px; padding: 15px; overflow-y: auto; }
+    .standings h2, #matches-container h2 { text-align: center; text-transform: uppercase; }
+    .match { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 15px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; transition: background 0.3s; }
+    .match.played { background: #d2f8d2; }
+    .match.played .player-names { color: #555; } /* Make player names lighter */
+    .hidden { display: none !important; }
+    .score-input { width: 3rem; text-align: center; font-size: 1rem; }
+    .score-section { display: flex; align-items: center; gap: 5px; }
+    .filter-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; justify-content: center; margin-bottom: 30px; }
+    .filter-btn { padding: 5px 10px; background: #ccc; border: none; border-radius: 5px; cursor: pointer; }
+    .filter-btn.active { background: #a3d9a5; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #e7f5e7; color: #0e7546; }
+    .submit-btn, .edit-btn, #save-button { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    .edit-btn { background-color: #66bb6a; } /* Changed to a less visible green */
+    #save-button { background: #0e7546; display: block; margin: 20px auto 30px; padding: 8px 15px; font-size: 0.8rem; } /* Changed color, font size and increased bottom margin */
+    .gold { background-color: #fff8dc !important; }
+    .silver { background-color: #f5f5f5 !important; }
+    .bronze { background-color: #fcebd0 !important; }
+    @media (max-width: 768px) { .row { flex-direction: column; } }
+  </style>
+</head>
+<body>
+  <header>TORNEO DI BILIARDINO</header>
+  
+  <div class="container">
+    <div class="standings">
+      <h2>Classifica</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Posizione</th><th>Giocatore</th><th>Giocate</th><th>Vinte</th><th>% Vittorie</th><th>Segnati</th><th>Subiti</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard"></tbody>
+      </table>
+    </div>
+
+    <div id="matches-container">
+      <h2>Partite</h2>
+      <div class="filter-buttons" id="player-filters"></div>
+      <div id="matches"></div>
+    </div>
+  </div>
+
+  <button id="save-button" onclick="saveScoresToFile()">ESPORTA PUNTEGGIO</button>
+
+  <script src="punteggi.js"></script>
+
+  <script>
+    if (typeof savedScores === 'undefined') {
+      var savedScores = {};
+    }
+
+    const players = ["CHIARA", "FRENKIE", "IRE", "KLM", "LUCA", "TEO"];
+    let stats = Object.fromEntries(players.map(p => [p, {
+      points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0
+    }]));
+
+    const matches = [
+      ["CHIARA", "FRENKIE", "IRE", "KLM"], ["CHIARA", "FRENKIE", "IRE", "LUCA"], ["CHIARA", "FRENKIE", "IRE", "TEO"],
+      ["CHIARA", "FRENKIE", "KLM", "LUCA"], ["CHIARA", "FRENKIE", "KLM", "TEO"], ["CHIARA", "FRENKIE", "LUCA", "TEO"],
+      ["CHIARA", "IRE", "FRENKIE", "KLM"], ["CHIARA", "IRE", "FRENKIE", "LUCA"], ["CHIARA", "IRE", "FRENKIE", "TEO"],
+      ["CHIARA", "IRE", "KLM", "LUCA"], ["CHIARA", "IRE", "KLM", "TEO"], ["CHIARA", "IRE", "LUCA", "TEO"],
+      ["CHIARA", "KLM", "FRENKIE", "IRE"], ["CHIARA", "KLM", "FRENKIE", "LUCA"], ["CHIARA", "KLM", "FRENKIE", "TEO"],
+      ["CHIARA", "KLM", "IRE", "LUCA"], ["CHIARA", "KLM", "IRE", "TEO"], ["CHIARA", "KLM", "LUCA", "TEO"],
+      ["CHIARA", "LUCA", "FRENKIE", "IRE"], ["CHIARA", "LUCA", "FRENKIE", "KLM"], ["CHIARA", "LUCA", "FRENKIE", "TEO"],
+      ["CHIARA", "LUCA", "IRE", "KLM"], ["CHIARA", "LUCA", "IRE", "TEO"], ["CHIARA", "LUCA", "KLM", "TEO"],
+      ["CHIARA", "TEO", "FRENKIE", "IRE"], ["CHIARA", "TEO", "FRENKIE", "KLM"], ["CHIARA", "TEO", "FRENKIE", "LUCA"],
+      ["CHIARA", "TEO", "IRE", "KLM"], ["CHIARA", "TEO", "IRE", "LUCA"], ["CHIARA", "TEO", "KLM", "LUCA"],
+      ["FRENKIE", "IRE", "KLM", "LUCA"], ["FRENKIE", "IRE", "KLM", "TEO"], ["FRENKIE", "IRE", "LUCA", "TEO"],
+      ["FRENKIE", "KLM", "IRE", "LUCA"], ["FRENKIE", "KLM", "IRE", "TEO"], ["FRENKIE", "KLM", "LUCA", "TEO"],
+      ["FRENKIE", "LUCA", "IRE", "KLM"], ["FRENKIE", "LUCA", "IRE", "TEO"], ["FRENKIE", "LUCA", "KLM", "TEO"],
+      ["FRENKIE", "TEO", "IRE", "KLM"], ["FRENKIE", "TEO", "IRE", "LUCA"], ["FRENKIE", "TEO", "KLM", "LUCA"],
+      ["IRE", "KLM", "LUCA", "TEO"], ["IRE", "LUCA", "KLM", "TEO"], ["IRE", "TEO", "KLM", "LUCA"]
+    ].map(([a1, a2, b1, b2]) => [[a1, a2], [b1, b2]]);
+
+    const activeFilters = new Set();
+    
+    function renderFilters(){const c=document.getElementById("player-filters");c.innerHTML="",players.forEach(p=>{const e=document.createElement("button");e.textContent=p,e.className="filter-btn",e.onclick=()=>{e.classList.toggle("active"),activeFilters.has(p)?activeFilters.delete(p):activeFilters.add(p),filterMatches()},c.appendChild(e)})}
+    
+    function renderMatches(){
+      const c=document.getElementById("matches");
+      c.innerHTML="";
+      matches.forEach(([e,t],l)=>{
+        const s=document.createElement("div");
+        s.className="match";
+        const a=savedScores[l];
+        // Add or remove 'played' class based on whether scores exist and are not 0-0
+        if (a && (a.s1 !== 0 || a.s2 !== 0)) {
+            s.classList.add("played");
+        } else {
+            s.classList.remove("played");
+        }
+        s.innerHTML=`
+          <div class="player-names">${e.join(" & ")} vs ${t.join(" & ")}</div>
+          <div class="score-section">
+            <input type="number" id="s1-${l}" class="score-input" min="0" max="10" value="${a?.s1||""}" ${a?"disabled":""}>
+            -
+            <input type="number" id="s2-${l}" class="score-input" min="0" max="10" value="${a?.s2||""}" ${a?"disabled":""}>
+            <button id="submit-btn-${l}" class="submit-btn" onclick="submitScore(${l})" style="display: ${a?"none":"inline-block"};">OK</button>
+            <button id="edit-btn-${l}" class="edit-btn" onclick="editScore(${l})" style="display: ${a?"inline-block":"none"};">Modifica</button>
+          </div>
+        `;
+        c.appendChild(s);
+      });
+    }
+
+    function editScore(c){document.getElementById(`s1-${c}`).disabled=!1,document.getElementById(`s2-${c}`).disabled=!1,document.getElementById(`submit-btn-${c}`).style.display="inline-block",document.getElementById(`edit-btn-${c}`).style.display="none"}
+    
+    function submitScore(c){
+      const e=document.getElementById(`s1-${c}`);
+      const t=document.getElementById(`s2-${c}`);
+      const l=parseInt(e.value);
+      const s=parseInt(t.value);
+      
+      if(!isNaN(l)&&!isNaN(s)){
+        // Removed the specific 10-point winning condition
+        
+        if(savedScores[c]){
+          if(!confirm("Sei sicuro di voler sovrascrivere il punteggio?"))
+            return e.value=savedScores[c].s1,t.value=savedScores[c].s2,e.disabled=!0,t.disabled=!0,document.getElementById(`submit-btn-${c}`).style.display="none",void(document.getElementById(`edit-btn-${c}`).style.display="inline-block");
+        }
+        
+        savedScores[c]={s1:l,s2:s};
+
+        // If score is 0-0, remove it from savedScores and remove 'played' class
+        if (l === 0 && s === 0) {
+            delete savedScores[c]; // Remove the entry
+            const matchElement = document.getElementById("matches").children[c];
+            if (matchElement) {
+                matchElement.classList.remove('played');
+            }
+        }
+        
+        calculateAllStats();
+        renderMatches();
+        filterMatches();
+      }
+    }
+
+    function calculateAllStats(){stats=Object.fromEntries(players.map(c=>[c,{points:0,played:0,won:0,goalsFor:0,goalsAgainst:0}])),Object.entries(savedScores).forEach(([c,e])=>{const[t,l]=matches[c],s=e.s1,a=e.s2;t.forEach(c=>{stats[c].played++,stats[c].points+=s,stats[c].goalsFor+=s,stats[c].goalsAgainst+=a}),l.forEach(c=>{stats[c].played++,stats[c].points+=a,stats[c].goalsFor+=a,stats[c].goalsAgainst+=s}),s>a?t.forEach(c=>stats[c].won++):a>s&&l.forEach(c=>stats[c].won++)}),updateLeaderboard()}
+    function updateLeaderboard(){const c=document.getElementById("leaderboard");c.innerHTML="";const e=Object.entries(stats).sort((c,e)=>e[1].points!==c[1].points?e[1].points-c[1].points:e[1].goalsFor-e[1].goalsAgainst-(c[1].goalsFor-c[1].goalsAgainst));e.forEach(([e,t],l)=>{const s=t.played>0?Math.round(t.won/t.played*100)+"%":"0%",a=document.createElement("tr");0===l?a.classList.add("gold"):1===l?a.classList.add("silver"):2===l&&a.classList.add("bronze"),a.innerHTML=`<td>${l+1}</td><td><strong>${e}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td><td><strong>${t.goalsFor}</strong></td><td>${t.goalsAgainst}</td>`,c.appendChild(a)})}
+    function filterMatches(){const c=document.querySelectorAll(".match");c.forEach((e,t)=>{const[l,s]=matches[t],a=[...l,...s],o=activeFilters.size>0,i=[...activeFilters].every(c=>a.includes(c));e.classList.toggle("hidden",o&&!i)})}
+
+    function saveScoresToFile() {
+      const fileContent = `// Dati del torneo. Questo file viene sovrascritto dal programma.\nvar savedScores = ${JSON.stringify(savedScores, null, 2)};`;
+      
+      const blob = new Blob([fileContent], { type: 'application/javascript' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'punteggi.js';
+      a.click();
+      URL.revokeObjectURL(a.href);
+      
+      alert("File 'punteggi.js' generato!\n\nRicorda di sovrascrivere il file vecchio nella cartella condivisa con questo appena scaricato.");
+    }
+
+    renderFilters();
+    renderMatches();
+    calculateAllStats();
+    filterMatches();
+  </script>
+</body>
+</html>
