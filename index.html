@@ -1,341 +1,396 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>TORNEO DI BILIARDINO</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: Arial, sans-serif; background-color: #f1f5e3; margin: 0; padding: 0; }
-    header { background-color: #0e7546; color: white; text-align: center; padding: 1.5rem 0; font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; letter-spacing: 2px; }
-    .container { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
-    #matches-container, .standings { flex: 1; background: #fff; border-radius: 8px; padding: 15px; overflow-y: auto; }
-    .standings h2, #matches-container h2 { text-align: center; text-transform: uppercase; }
-    .match { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 15px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; transition: background 0.3s; }
-    .match.played { background: #d2f8d2; }
-    .match.played .player-names { color: #555; }
-    .hidden { display: none !important; }
-    .score-input { width: 3rem; text-align: center; font-size: 1rem; }
-    .score-section { display: flex; align-items: center; gap: 5px; }
-    .filter-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; justify-content: center; margin-bottom: 30px; }
-    .filter-btn { padding: 5px 10px; background: #ccc; border: none; border-radius: 5px; cursor: pointer; }
-    .filter-btn.active { background: #a3d9a5; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-    th { background-color: #e7f5e7; color: #0e7546; }
-    .submit-btn, .edit-btn, #save-button { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-    .edit-btn { background-color: #66bb6a; }
-    #save-button { background: #0e7546; display: block; margin: 20px auto 30px; padding: 8px 15px; font-size: 0.8rem; }
-    .gold { background-color: #fff8dc !important; }
-    .silver { background-color: #f5f5f5 !important; }
-    .bronze { background-color: #fcebd0 !important; }
-    @media (max-width: 768px) { .row { flex-direction: column; } }
-    #loading { text-align: center; padding: 20px; }
-    #error-message { color: red; text-align: center; padding: 10px; }
-  </style>
+    <meta charset="UTF-8">
+    <title>TORNEO DI BILIARDINO</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f1f5e3; margin: 0; padding: 0; }
+        header { background-color: #0e7546; color: white; text-align: center; padding: 1.5rem 0; font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; letter-spacing: 2px; }
+        .container { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
+        #matches-container, .standings { flex: 1; background: #fff; border-radius: 8px; padding: 15px; overflow-y: auto; }
+        .standings h2, #matches-container h2 { text-align: center; text-transform: uppercase; }
+        .match { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 15px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; transition: background 0.3s; }
+        .match.played { background: #d2f8d2; }
+        .match.played .player-names { color: #555; }
+        .hidden { display: none !important; }
+        .score-input { width: 3rem; text-align: center; font-size: 1rem; }
+        .score-section { display: flex; align-items: center; gap: 5px; }
+        .filter-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; justify-content: center; margin-bottom: 30px; }
+        .filter-btn { padding: 5px 10px; background: #ccc; border: none; border-radius: 5px; cursor: pointer; }
+        .filter-btn.active { background: #a3d9a5; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+        th { background-color: #e7f5e7; color: #0e7546; }
+        .submit-btn, .edit-btn, #save-button { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+        .edit-btn { background-color: #66bb6a; }
+        #save-button { background: #0e7546; display: block; margin: 20px auto 30px; padding: 8px 15px; font-size: 0.8rem; }
+        .gold { background-color: #fff8dc !important; }
+        .silver { background-color: #f5f5f5 !important; }
+        .bronze { background-color: #fcebd0 !important; }
+        @media (max-width: 768px) { .row { flex-direction: column; } }
+        #loading { text-align: center; padding: 20px; }
+        #message-area { color: orange; text-align: center; padding: 10px; } /* Per messaggi di stato/errore */
+    </style>
 </head>
 <body>
-  <header>TORNEO DI BILIARDINO</header>
-  
-  <div id="loading">Caricamento in corso...</div>
-  <div id="error-message"></div>
-
-  <div class="container" id="app-content" style="display: none;">
-    <div class="standings">
-      <h2>Classifica</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Posizione</th><th>Giocatore</th><th>Giocate</th><th>Vinte</th><th>% Vittorie</th><th>Segnati</th><th>Subiti</th>
-          </tr>
-        </thead>
-        <tbody id="leaderboard"></tbody>
-      </table>
-    </div>
-
-    <div id="matches-container">
-      <h2>Partite</h2>
-      <div class="filter-buttons" id="player-filters"></div>
-      <div id="matches"></div>
-    </div>
-  </div>
-
-  <button id="save-button">SALVA PUNTEGGI ONLINE</button>
-
-  <script>
-    // Configurazione Gist
-    const GIST_ID = "488349475ea8d1bc31ac5ea037bda43e";
-    const GIST_TOKEN = "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";
-
-    // Variabili globali
-    let savedScores = {};
-    const players = ["CHIARA", "FRENKIE", "IRE", "KLM", "LUCA", "TEO"];
-    let stats = {};
+    <header>TORNEO DI BILIARDINO</header>
     
-    const matches = [
-      ["CHIARA", "FRENKIE", "IRE", "KLM"], ["CHIARA", "FRENKIE", "IRE", "LUCA"], ["CHIARA", "FRENKIE", "IRE", "TEO"],
-      ["CHIARA", "FRENKIE", "KLM", "LUCA"], ["CHIARA", "FRENKIE", "KLM", "TEO"], ["CHIARA", "FRENKIE", "LUCA", "TEO"],
-      ["CHIARA", "IRE", "FRENKIE", "KLM"], ["CHIARA", "IRE", "FRENKIE", "LUCA"], ["CHIARA", "IRE", "FRENKIE", "TEO"],
-      ["CHIARA", "IRE", "KLM", "LUCA"], ["CHIARA", "IRE", "KLM", "TEO"], ["CHIARA", "IRE", "LUCA", "TEO"],
-      ["CHIARA", "KLM", "FRENKIE", "IRE"], ["CHIARA", "KLM", "FRENKIE", "LUCA"], ["CHIARA", "KLM", "FRENKIE", "TEO"],
-      ["CHIARA", "KLM", "IRE", "LUCA"], ["CHIARA", "KLM", "IRE", "TEO"], ["CHIARA", "KLM", "LUCA", "TEO"],
-      ["CHIARA", "LUCA", "FRENKIE", "IRE"], ["CHIARA", "LUCA", "FRENKIE", "KLM"], ["CHIARA", "LUCA", "FRENKIE", "TEO"],
-      ["CHIARA", "LUCA", "IRE", "KLM"], ["CHIARA", "LUCA", "IRE", "TEO"], ["CHIARA", "LUCA", "KLM", "TEO"],
-      ["CHIARA", "TEO", "FRENKIE", "IRE"], ["CHIARA", "TEO", "FRENKIE", "KLM"], ["CHIARA", "TEO", "FRENKIE", "LUCA"],
-      ["CHIARA", "TEO", "IRE", "KLM"], ["CHIARA", "TEO", "IRE", "LUCA"], ["CHIARA", "TEO", "KLM", "LUCA"],
-      ["FRENKIE", "IRE", "KLM", "LUCA"], ["FRENKIE", "IRE", "KLM", "TEO"], ["FRENKIE", "IRE", "LUCA", "TEO"],
-      ["FRENKIE", "KLM", "IRE", "LUCA"], ["FRENKIE", "KLM", "IRE", "TEO"], ["FRENKIE", "KLM", "LUCA", "TEO"],
-      ["FRENKIE", "LUCA", "IRE", "KLM"], ["FRENKIE", "LUCA", "IRE", "TEO"], ["FRENKIE", "LUCA", "KLM", "TEO"],
-      ["FRENKIE", "TEO", "IRE", "KLM"], ["FRENKIE", "TEO", "IRE", "LUCA"], ["FRENKIE", "TEO", "KLM", "LUCA"],
-      ["IRE", "KLM", "LUCA", "TEO"], ["IRE", "LUCA", "KLM", "TEO"], ["IRE", "TEO", "KLM", "LUCA"]
-    ].map(([a1, a2, b1, b2]) => [[a1, a2], [b1, b2]]);
+    <div id="loading">Caricamento in corso...</div>
+    <div id="message-area"></div> <div class="container" id="app-content" style="display: none;">
+        <div class="standings">
+            <h2>Classifica</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Posizione</th><th>Giocatore</th><th>Punti</th><th>Giocate</th><th>Vinte</th><th>% Vittorie</th><th>Segnati</th><th>Subiti</th>
+                    </tr>
+                </thead>
+                <tbody id="leaderboard"></tbody>
+            </table>
+        </div>
 
-    const activeFilters = new Set();
+        <div id="matches-container">
+            <h2>Partite</h2>
+            <div class="filter-buttons" id="player-filters"></div>
+            <div id="matches"></div>
+        </div>
+    </div>
 
-    // FUNZIONI PRINCIPALI
-    async function loadScoresFromGist() {
-      try {
-        const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-          headers: {
-            'Authorization': `Bearer ${GIST_TOKEN}`,
-            'Accept': 'application/vnd.github+json'
-          }
-        });
-        
-        if (!response.ok) throw new Error(await response.text());
-        
-        const gistData = await response.json();
-        const scoresJson = gistData.files["biliardino-scores.json"].content;
-        savedScores = JSON.parse(scoresJson || "{}");
-        localStorage.setItem('biliardino-backup', scoresJson);
-        
-      } catch (error) {
-        console.error("Errore nel caricamento:", error);
-        const backup = localStorage.getItem('biliardino-backup');
-        savedScores = backup ? JSON.parse(backup) : {};
-        throw error; // Rilancia per gestione fallback
-      }
-    }
+    <button id="save-button">SALVA PUNTEGGI ONLINE</button>
 
-    async function saveScoresToGist() {
-      try {
-        document.getElementById("save-button").disabled = true;
-        const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
-          method: "PATCH",
-          headers: {
-            "Authorization": `Bearer ${GIST_TOKEN}`,
-            "Content-Type": "application/json",
-            "Accept": "application/vnd.github+json"
-          },
-          body: JSON.stringify({
-            description: "Salvataggio punteggi biliardino",
-            files: {
-              "biliardino-scores.json": {
-                content: JSON.stringify(savedScores)
-              }
+    <script>
+        // Configurazione Gist - ATTENZIONE: IL TUO TOKEN NON DEVE ESSERE QUI!
+        // Questo token è stato rimosso per sicurezza. Senza un backend,
+        // i dati verranno salvati solo localmente nel browser.
+        const GIST_ID = "488349475ea8d1bc31ac5ea037bda43e";
+        const GIST_TOKEN = "YOUR_GIST_TOKEN_HERE"; // <--- INSERISCI QUI IL TUO TOKEN SE VUOI TESTARE, MA SAREBBE INADEGUATO PER LA PRODUZIONE!
+
+        // Variabili globali
+        let savedScores = {};
+        const players = ["CHIARA", "FRENKIE", "IRE", "KLM", "LUCA", "TEO"];
+        let stats = {};
+        
+        // Genera tutte le combinazioni possibili di coppie contro coppie
+        // Assicura che ogni coppia sia unica e che non ci siano duplicati totali di partite
+        const generateMatches = (players) => {
+            const matches = [];
+            for (let i = 0; i < players.length; i++) {
+                for (let j = i + 1; j < players.length; j++) {
+                    const team1 = [players[i], players[j]].sort(); // Ordina per coerenza
+                    const remainingPlayers = players.filter(p => p !== players[i] && p !== players[j]);
+                    for (let k = 0; k < remainingPlayers.length; k++) {
+                        for (let l = k + 1; l < remainingPlayers.length; l++) {
+                            const team2 = [remainingPlayers[k], remainingPlayers[l]].sort(); // Ordina per coerenza
+                            // Evita duplicati di partite (es. A&B vs C&D è la stessa di C&D vs A&B)
+                            // Normalizza l'ordine delle squadre all'interno della partita
+                            const orderedMatch = [team1.join('&'), team2.join('&')].sort();
+                            // Controlla se la partita (normalizzata) esiste già
+                            const isDuplicate = matches.some(m => {
+                                const existingOrderedMatch = [m[0].join('&'), m[1].join('&')].sort();
+                                return existingOrderedMatch[0] === orderedMatch[0] && existingOrderedMatch[1] === orderedMatch[1];
+                            });
+
+                            if (!isDuplicate) {
+                                matches.push([team1, team2]);
+                            }
+                        }
+                    }
+                }
             }
-          })
-        });
-
-        if (!response.ok) throw new Error(await response.text());
-        
-        // Backup locale
-        localStorage.setItem('biliardino-backup', JSON.stringify(savedScores));
-        return true;
-        
-      } catch (error) {
-        console.error("Errore nel salvataggio:", error);
-        // Fallback a localStorage
-        localStorage.setItem('biliardino-backup', JSON.stringify(savedScores));
-        return false;
-      } finally {
-        document.getElementById("save-button").disabled = false;
-      }
-    }
-
-    // FUNZIONI DI SUPPORTO
-    function showError(message) {
-      const errorEl = document.getElementById("error-message");
-      errorEl.textContent = message;
-      setTimeout(() => errorEl.textContent = "", 5000);
-    }
-
-    function initStats() {
-      stats = Object.fromEntries(players.map(p => [p, {
-        points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0
-      }]));
-    }
-
-    function renderFilters() {
-      const container = document.getElementById("player-filters");
-      container.innerHTML = "";
-      players.forEach(player => {
-        const btn = document.createElement("button");
-        btn.textContent = player;
-        btn.className = "filter-btn";
-        btn.onclick = () => {
-          btn.classList.toggle("active");
-          activeFilters.has(player) ? activeFilters.delete(player) : activeFilters.add(player);
-          filterMatches();
+            return matches;
         };
-        container.appendChild(btn);
-      });
-    }
 
-    function renderMatches() {
-      const container = document.getElementById("matches");
-      container.innerHTML = "";
-      matches.forEach(([team1, team2], index) => {
-        const match = document.createElement("div");
-        match.className = "match";
-        const score = savedScores[index];
-        
-        if (score && (score.s1 !== 0 || score.s2 !== 0)) {
-          match.classList.add("played");
+        const allMatches = generateMatches(players); // Genera le partite dinamicamente
+        const activeFilters = new Set();
+
+        // FUNZIONI PRINCIPALI
+        async function loadScoresFromGist() {
+            if (GIST_TOKEN === "YOUR_GIST_TOKEN_HERE" || !GIST_TOKEN) {
+                console.warn("GIST_TOKEN non configurato o rimosso. Caricamento solo da localStorage.");
+                throw new Error("GIST_TOKEN non configurato.");
+            }
+            try {
+                const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    headers: {
+                        'Authorization': `Bearer ${GIST_TOKEN}`,
+                        'Accept': 'application/vnd.github+json'
+                    }
+                });
+                
+                if (!response.ok) throw new Error(`Errore Gist: ${response.statusText}`);
+                
+                const gistData = await response.json();
+                const scoresJson = gistData.files["biliardino-scores.json"]?.content;
+                savedScores = JSON.parse(scoresJson || "{}");
+                localStorage.setItem('biliardino-scores', scoresJson); // Aggiorna il backup locale
+                
+            } catch (error) {
+                console.error("Errore nel caricamento da Gist:", error);
+                throw error; // Rilancia per gestione fallback
+            }
         }
 
-        match.innerHTML = `
-          <div class="player-names">${team1.join(" & ")} vs ${team2.join(" & ")}</div>
-          <div class="score-section">
-            <input type="number" id="s1-${index}" class="score-input" min="0" max="10" 
-                   value="${score?.s1 || ""}" ${score ? "disabled" : ""}>
-            -
-            <input type="number" id="s2-${index}" class="score-input" min="0" max="10" 
-                   value="${score?.s2 || ""}" ${score ? "disabled" : ""}>
-            <button id="submit-btn-${index}" class="submit-btn" onclick="submitScore(${index})" 
-                    style="display: ${score ? "none" : "inline-block"};">OK</button>
-            <button id="edit-btn-${index}" class="edit-btn" onclick="editScore(${index})" 
-                    style="display: ${score ? "inline-block" : "none"};">Modifica</button>
-          </div>
-        `;
-        container.appendChild(match);
-      });
-    }
+        async function saveScoresToGist() {
+            if (GIST_TOKEN === "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" || !GIST_TOKEN) {
+                console.warn("GIST_TOKEN non configurato. Salvataggio solo su localStorage.");
+                showMessage("Token GitHub non configurato. Salvato localmente.");
+                localStorage.setItem('biliardino-scores', JSON.stringify(savedScores));
+                return true; // Simula successo per il flusso logico
+            }
 
-    function editScore(index) {
-      document.getElementById(`s1-${index}`).disabled = false;
-      document.getElementById(`s2-${index}`).disabled = false;
-      document.getElementById(`submit-btn-${index}`).style.display = "inline-block";
-      document.getElementById(`edit-btn-${index}`).style.display = "none";
-    }
+            document.getElementById("save-button").disabled = true;
+            try {
+                const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+                    method: "PATCH",
+                    headers: {
+                        "Authorization": `Bearer ${GIST_TOKEN}`,
+                        "Content-Type": "application/json",
+                        "Accept": "application/vnd.github+json"
+                    },
+                    body: JSON.stringify({
+                        description: "Salvataggio punteggi biliardino",
+                        files: {
+                            "biliardino-scores.json": {
+                                content: JSON.stringify(savedScores)
+                            }
+                        }
+                    })
+                });
 
-    function submitScore(index) {
-      const score1 = parseInt(document.getElementById(`s1-${index}`).value);
-      const score2 = parseInt(document.getElementById(`s2-${index}`).value);
-      
-      if (!isNaN(score1) && !isNaN(score2)) {
-        savedScores[index] = { s1: score1, s2: score2 };
-        saveScoresToGist().then(success => {
-          if (success) {
-            calculateAllStats();
-            renderMatches();
-            filterMatches();
-          }
+                if (!response.ok) throw new Error(`Errore Gist: ${response.statusText} - ${await response.text()}`);
+                
+                localStorage.setItem('biliardino-scores', JSON.stringify(savedScores)); // Backup locale
+                showMessage("Punteggi salvati online e localmente!", "green");
+                return true;
+                
+            } catch (error) {
+                console.error("Errore nel salvataggio su Gist:", error);
+                showMessage(`Errore nel salvataggio online: ${error.message}. Salvato localmente.`, "red");
+                localStorage.setItem('biliardino-scores', JSON.stringify(savedScores)); // Fallback a localStorage
+                return false;
+            } finally {
+                document.getElementById("save-button").disabled = false;
+            }
+        }
+
+        // FUNZIONI DI SUPPORTO
+        function showMessage(message, type = "orange", duration = 5000) {
+            const messageEl = document.getElementById("message-area");
+            messageEl.textContent = message;
+            messageEl.style.color = type;
+            clearTimeout(messageEl.timer); // Rimuove timer precedente
+            messageEl.timer = setTimeout(() => messageEl.textContent = "", duration);
+        }
+
+        function initStats() {
+            stats = Object.fromEntries(players.map(p => [p, {
+                points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0
+            }]));
+        }
+
+        function renderFilters() {
+            const container = document.getElementById("player-filters");
+            container.innerHTML = "";
+            players.forEach(player => {
+                const btn = document.createElement("button");
+                btn.textContent = player;
+                btn.className = "filter-btn";
+                btn.addEventListener('click', () => {
+                    btn.classList.toggle("active");
+                    activeFilters.has(player) ? activeFilters.delete(player) : activeFilters.add(player);
+                    filterMatches();
+                });
+                container.appendChild(btn);
+            });
+        }
+
+        function renderMatches() {
+            const container = document.getElementById("matches");
+            container.innerHTML = "";
+            allMatches.forEach(([team1, team2], index) => {
+                const matchDiv = document.createElement("div");
+                matchDiv.className = "match";
+                const score = savedScores[index];
+                
+                if (score && (score.s1 !== undefined && score.s2 !== undefined)) {
+                    matchDiv.classList.add("played");
+                }
+
+                matchDiv.innerHTML = `
+                    <div class="player-names">${team1.join(" & ")} vs ${team2.join(" & ")}</div>
+                    <div class="score-section">
+                        <input type="number" id="s1-${index}" class="score-input" min="0" max="10" 
+                               value="${score?.s1 !== undefined ? score.s1 : ""}" ${score ? "disabled" : ""}>
+                        -
+                        <input type="number" id="s2-${index}" class="score-input" min="0" max="10" 
+                               value="${score?.s2 !== undefined ? score.s2 : ""}" ${score ? "disabled" : ""}>
+                        <button id="submit-btn-${index}" class="submit-btn" 
+                                style="display: ${score ? "none" : "inline-block"};">OK</button>
+                        <button id="edit-btn-${index}" class="edit-btn" 
+                                style="display: ${score ? "inline-block" : "none"};">Modifica</button>
+                    </div>
+                `;
+                container.appendChild(matchDiv);
+
+                // Aggiungi event listeners dinamicamente
+                const s1Input = matchDiv.querySelector(`#s1-${index}`);
+                const s2Input = matchDiv.querySelector(`#s2-${index}`);
+                const submitBtn = matchDiv.querySelector(`#submit-btn-${index}`);
+                const editBtn = matchDiv.querySelector(`#edit-btn-${index}`);
+
+                editBtn.addEventListener('click', () => {
+                    s1Input.disabled = false;
+                    s2Input.disabled = false;
+                    submitBtn.style.display = "inline-block";
+                    editBtn.style.display = "none";
+                });
+
+                submitBtn.addEventListener('click', () => {
+                    const score1 = parseInt(s1Input.value);
+                    const score2 = parseInt(s2Input.value);
+                    
+                    if (isNaN(score1) || isNaN(score2) || score1 < 0 || score2 < 0 || score1 > 10 || score2 > 10) {
+                        showMessage("Inserisci punteggi validi (0-10).", "red");
+                        return;
+                    }
+                    if (score1 === score2) {
+                        showMessage("La partita non può finire in pareggio.", "red");
+                        return;
+                    }
+
+                    savedScores[index] = { s1: score1, s2: score2 };
+                    saveScoresToGist().then(() => {
+                        calculateAllStats();
+                        // Rirenderizza solo la partita specifica per aggiornare lo stato e i bottoni
+                        matchDiv.classList.add("played");
+                        s1Input.disabled = true;
+                        s2Input.disabled = true;
+                        submitBtn.style.display = "none";
+                        editBtn.style.display = "inline-block";
+                        filterMatches(); // Applica i filtri dopo l'aggiornamento
+                    });
+                });
+            });
+        }
+
+        function calculateAllStats() {
+            initStats(); // Resetta le statistiche prima di ricalcolare
+            
+            Object.entries(savedScores).forEach(([indexStr, score]) => {
+                const index = parseInt(indexStr); // Assicurati che l'indice sia un numero
+                if (!allMatches[index]) return; // Salta se la partita non esiste (es. dati vecchi)
+
+                const [team1, team2] = allMatches[index];
+                const score1 = score.s1;
+                const score2 = score.s2;
+                
+                // Ignora partite con punteggi non validi o incomplete
+                if (score1 === undefined || score2 === undefined || isNaN(score1) || isNaN(score2)) return;
+
+                // Aggiorna statistiche per team1
+                team1.forEach(player => {
+                    stats[player].played++;
+                    stats[player].goalsFor += score1;
+                    stats[player].goalsAgainst += score2;
+                    if (score1 > score2) {
+                        stats[player].points += 3; // 3 punti per la vittoria
+                        stats[player].won++;
+                    }
+                });
+                
+                // Aggiorna statistiche per team2
+                team2.forEach(player => {
+                    stats[player].played++;
+                    stats[player].goalsFor += score2;
+                    stats[player].goalsAgainst += score1;
+                    if (score2 > score1) {
+                        stats[player].points += 3; // 3 punti per la vittoria
+                        stats[player].won++;
+                    }
+                });
+            });
+            
+            updateLeaderboard();
+        }
+
+        function updateLeaderboard() {
+            const leaderboard = document.getElementById("leaderboard");
+            leaderboard.innerHTML = "";
+            
+            const sortedPlayers = Object.entries(stats).sort((a, b) => {
+                // Ordina per Punti
+                if (b[1].points !== a[1].points) return b[1].points - a[1].points;
+                // Poi per Differenza Gol (Segnati - Subiti)
+                const diffA = a[1].goalsFor - a[1].goalsAgainst;
+                const diffB = b[1].goalsFor - b[1].goalsAgainst;
+                if (diffB !== diffA) return diffB - diffA;
+                // Poi per Gol Segnati (in caso di parità su punti e differenza gol)
+                return b[1].goalsFor - a[1].goalsFor;
+            });
+
+            sortedPlayers.forEach(([player, data], index) => {
+                const row = document.createElement("tr");
+                if (index === 0) row.classList.add("gold");
+                else if (index === 1) row.classList.add("silver");
+                else if (index === 2) row.classList.add("bronze");
+                
+                const winPercentage = data.played > 0 
+                    ? Math.round((data.won / data.played) * 100) + "%" 
+                    : "0%";
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><strong>${player}</strong></td>
+                    <td>${data.points}</td>
+                    <td>${data.played}</td>
+                    <td>${data.won}</td>
+                    <td>${winPercentage}</td>
+                    <td><strong>${data.goalsFor}</strong></td>
+                    <td>${data.goalsAgainst}</td>
+                `;
+                leaderboard.appendChild(row);
+            });
+        }
+
+        function filterMatches() {
+            const allMatchElements = document.querySelectorAll("#matches .match");
+            allMatchElements.forEach((matchEl, index) => {
+                const [team1, team2] = allMatches[index];
+                const allPlayersInMatch = [...team1, ...team2];
+                const shouldShow = activeFilters.size === 0 || 
+                    [...activeFilters].every(player => allPlayersInMatch.includes(player));
+                matchEl.classList.toggle("hidden", !shouldShow);
+            });
+        }
+
+        // INIZIALIZZAZIONE
+        document.addEventListener("DOMContentLoaded", async () => {
+            document.getElementById("save-button").addEventListener("click", saveScoresToGist);
+            initStats(); // Inizializza le statistiche vuote
+            renderFilters(); // Rende i bottoni dei filtri
+
+            try {
+                await loadScoresFromGist();
+                showMessage("Punteggi caricati da GitHub Gist.", "green");
+            } catch (error) {
+                // Se Gist fallisce, prova a caricare da localStorage
+                const backup = localStorage.getItem('biliardino-scores');
+                if (backup) {
+                    savedScores = JSON.parse(backup);
+                    showMessage("Errore nel caricamento da GitHub Gist. Usando il backup locale.", "orange");
+                } else {
+                    savedScores = {}; // Nessun backup, inizia da zero
+                    showMessage("Nessun punteggio trovato online o in locale. Inizia a giocare!", "blue");
+                }
+            } finally {
+                renderMatches(); // Renderizza le partite con i punteggi caricati (o vuoti)
+                calculateAllStats(); // Calcola le statistiche e la classifica
+                
+                document.getElementById("loading").style.display = "none";
+                document.getElementById("app-content").style.display = "flex";
+            }
         });
-      }
-    }
-
-    function calculateAllStats() {
-      initStats();
-      
-      Object.entries(savedScores).forEach(([index, score]) => {
-        const [team1, team2] = matches[index];
-        const score1 = score.s1;
-        const score2 = score.s2;
-        
-        // Aggiorna statistiche per team1
-        team1.forEach(player => {
-          stats[player].played++;
-          stats[player].points += score1;
-          stats[player].goalsFor += score1;
-          stats[player].goalsAgainst += score2;
-          if (score1 > score2) stats[player].won++;
-        });
-        
-        // Aggiorna statistiche per team2
-        team2.forEach(player => {
-          stats[player].played++;
-          stats[player].points += score2;
-          stats[player].goalsFor += score2;
-          stats[player].goalsAgainst += score1;
-          if (score2 > score1) stats[player].won++;
-        });
-      });
-      
-      updateLeaderboard();
-    }
-
-    function updateLeaderboard() {
-      const leaderboard = document.getElementById("leaderboard");
-      leaderboard.innerHTML = "";
-      
-      const sortedPlayers = Object.entries(stats).sort((a, b) => {
-        if (b[1].points !== a[1].points) return b[1].points - a[1].points;
-        return (b[1].goalsFor - b[1].goalsAgainst) - (a[1].goalsFor - a[1].goalsAgainst);
-      });
-
-      sortedPlayers.forEach(([player, data], index) => {
-        const row = document.createElement("tr");
-        if (index === 0) row.classList.add("gold");
-        else if (index === 1) row.classList.add("silver");
-        else if (index === 2) row.classList.add("bronze");
-        
-        const winPercentage = data.played > 0 
-          ? Math.round((data.won / data.played) * 100) + "%" 
-          : "0%";
-        
-        row.innerHTML = `
-          <td>${index + 1}</td>
-          <td><strong>${player}</strong></td>
-          <td>${data.played}</td>
-          <td>${data.won}</td>
-          <td>${winPercentage}</td>
-          <td><strong>${data.goalsFor}</strong></td>
-          <td>${data.goalsAgainst}</td>
-        `;
-        leaderboard.appendChild(row);
-      });
-    }
-
-    function filterMatches() {
-      const allMatches = document.querySelectorAll(".match");
-      allMatches.forEach((match, index) => {
-        const [team1, team2] = matches[index];
-        const allPlayers = [...team1, ...team2];
-        const shouldShow = activeFilters.size === 0 || 
-          [...activeFilters].every(player => allPlayers.includes(player));
-        match.classList.toggle("hidden", !shouldShow);
-      });
-    }
-
-    // INIZIALIZZAZIONE
-    document.addEventListener("DOMContentLoaded", async () => {
-      try {
-        initStats();
-        await loadScoresFromGist();
-        renderFilters();
-        renderMatches();
-        calculateAllStats();
-        
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("app-content").style.display = "flex";
-        
-        // Collega il pulsante di salvataggio
-        document.getElementById("save-button").addEventListener("click", saveScoresToGist);
-        
-      } catch (error) {
-        console.error("Errore inizializzazione:", error);
-        showError("Errore nel caricamento. Usando dati locali...");
-        
-        // Fallback completo
-        initStats();
-        renderFilters();
-        renderMatches();
-        calculateAllStats();
-        
-        document.getElementById("loading").style.display = "none";
-        document.getElementById("app-content").style.display = "flex";
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
