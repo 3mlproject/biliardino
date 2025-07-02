@@ -59,7 +59,7 @@
     </div>
   </div>
 
-  <button id="save-button" onclick="saveScoresToGist()">SALVA PUNTEGGI ONLINE</button>
+  <button id="save-button">SALVA PUNTEGGI ONLINE</button>
 
   <script>
     // Configurazione Gist
@@ -73,7 +73,19 @@
     
     const matches = [
       ["CHIARA", "FRENKIE", "IRE", "KLM"], ["CHIARA", "FRENKIE", "IRE", "LUCA"], ["CHIARA", "FRENKIE", "IRE", "TEO"],
-      // ... (tutte le altre partite) ...
+      ["CHIARA", "FRENKIE", "KLM", "LUCA"], ["CHIARA", "FRENKIE", "KLM", "TEO"], ["CHIARA", "FRENKIE", "LUCA", "TEO"],
+      ["CHIARA", "IRE", "FRENKIE", "KLM"], ["CHIARA", "IRE", "FRENKIE", "LUCA"], ["CHIARA", "IRE", "FRENKIE", "TEO"],
+      ["CHIARA", "IRE", "KLM", "LUCA"], ["CHIARA", "IRE", "KLM", "TEO"], ["CHIARA", "IRE", "LUCA", "TEO"],
+      ["CHIARA", "KLM", "FRENKIE", "IRE"], ["CHIARA", "KLM", "FRENKIE", "LUCA"], ["CHIARA", "KLM", "FRENKIE", "TEO"],
+      ["CHIARA", "KLM", "IRE", "LUCA"], ["CHIARA", "KLM", "IRE", "TEO"], ["CHIARA", "KLM", "LUCA", "TEO"],
+      ["CHIARA", "LUCA", "FRENKIE", "IRE"], ["CHIARA", "LUCA", "FRENKIE", "KLM"], ["CHIARA", "LUCA", "FRENKIE", "TEO"],
+      ["CHIARA", "LUCA", "IRE", "KLM"], ["CHIARA", "LUCA", "IRE", "TEO"], ["CHIARA", "LUCA", "KLM", "TEO"],
+      ["CHIARA", "TEO", "FRENKIE", "IRE"], ["CHIARA", "TEO", "FRENKIE", "KLM"], ["CHIARA", "TEO", "FRENKIE", "LUCA"],
+      ["CHIARA", "TEO", "IRE", "KLM"], ["CHIARA", "TEO", "IRE", "LUCA"], ["CHIARA", "TEO", "KLM", "LUCA"],
+      ["FRENKIE", "IRE", "KLM", "LUCA"], ["FRENKIE", "IRE", "KLM", "TEO"], ["FRENKIE", "IRE", "LUCA", "TEO"],
+      ["FRENKIE", "KLM", "IRE", "LUCA"], ["FRENKIE", "KLM", "IRE", "TEO"], ["FRENKIE", "KLM", "LUCA", "TEO"],
+      ["FRENKIE", "LUCA", "IRE", "KLM"], ["FRENKIE", "LUCA", "IRE", "TEO"], ["FRENKIE", "LUCA", "KLM", "TEO"],
+      ["FRENKIE", "TEO", "IRE", "KLM"], ["FRENKIE", "TEO", "IRE", "LUCA"], ["FRENKIE", "TEO", "KLM", "LUCA"],
       ["IRE", "KLM", "LUCA", "TEO"], ["IRE", "LUCA", "KLM", "TEO"], ["IRE", "TEO", "KLM", "LUCA"]
     ].map(([a1, a2, b1, b2]) => [[a1, a2], [b1, b2]]);
 
@@ -82,15 +94,25 @@
     // FUNZIONI PRINCIPALI
     async function loadScoresFromGist() {
       try {
-        const response = await fetch(`https://api.github.com/gists/${GIST_ID}`);
+        const response = await fetch(`https://api.github.com/gists/${GIST_ID}`, {
+          headers: {
+            'Authorization': `Bearer ${GIST_TOKEN}`,
+            'Accept': 'application/vnd.github+json'
+          }
+        });
+        
         if (!response.ok) throw new Error(await response.text());
+        
         const gistData = await response.json();
         const scoresJson = gistData.files["biliardino-scores.json"].content;
         savedScores = JSON.parse(scoresJson || "{}");
+        localStorage.setItem('biliardino-backup', scoresJson);
+        
       } catch (error) {
         console.error("Errore nel caricamento:", error);
-        showError("Errore nel caricamento dei punteggi. Ricarica la pagina.");
-        savedScores = {};
+        const backup = localStorage.getItem('biliardino-backup');
+        savedScores = backup ? JSON.parse(backup) : {};
+        throw error; // Rilancia per gestione fallback
       }
     }
 
@@ -115,10 +137,16 @@
         });
 
         if (!response.ok) throw new Error(await response.text());
-        alert("Punteggi salvati con successo!");
+        
+        // Backup locale
+        localStorage.setItem('biliardino-backup', JSON.stringify(savedScores));
+        return true;
+        
       } catch (error) {
         console.error("Errore nel salvataggio:", error);
-        showError("Errore nel salvataggio. Verifica la connessione o il token.");
+        // Fallback a localStorage
+        localStorage.setItem('biliardino-backup', JSON.stringify(savedScores));
+        return false;
       } finally {
         document.getElementById("save-button").disabled = false;
       }
@@ -183,10 +211,104 @@
       });
     }
 
-    // ... (altre funzioni come submitScore, calculateAllStats, etc. mantenute uguali) ...
+    function editScore(index) {
+      document.getElementById(`s1-${index}`).disabled = false;
+      document.getElementById(`s2-${index}`).disabled = false;
+      document.getElementById(`submit-btn-${index}`).style.display = "inline-block";
+      document.getElementById(`edit-btn-${index}`).style.display = "none";
+    }
+
+    function submitScore(index) {
+      const score1 = parseInt(document.getElementById(`s1-${index}`).value);
+      const score2 = parseInt(document.getElementById(`s2-${index}`).value);
+      
+      if (!isNaN(score1) && !isNaN(score2)) {
+        savedScores[index] = { s1: score1, s2: score2 };
+        saveScoresToGist().then(success => {
+          if (success) {
+            calculateAllStats();
+            renderMatches();
+            filterMatches();
+          }
+        });
+      }
+    }
+
+    function calculateAllStats() {
+      initStats();
+      
+      Object.entries(savedScores).forEach(([index, score]) => {
+        const [team1, team2] = matches[index];
+        const score1 = score.s1;
+        const score2 = score.s2;
+        
+        // Aggiorna statistiche per team1
+        team1.forEach(player => {
+          stats[player].played++;
+          stats[player].points += score1;
+          stats[player].goalsFor += score1;
+          stats[player].goalsAgainst += score2;
+          if (score1 > score2) stats[player].won++;
+        });
+        
+        // Aggiorna statistiche per team2
+        team2.forEach(player => {
+          stats[player].played++;
+          stats[player].points += score2;
+          stats[player].goalsFor += score2;
+          stats[player].goalsAgainst += score1;
+          if (score2 > score1) stats[player].won++;
+        });
+      });
+      
+      updateLeaderboard();
+    }
+
+    function updateLeaderboard() {
+      const leaderboard = document.getElementById("leaderboard");
+      leaderboard.innerHTML = "";
+      
+      const sortedPlayers = Object.entries(stats).sort((a, b) => {
+        if (b[1].points !== a[1].points) return b[1].points - a[1].points;
+        return (b[1].goalsFor - b[1].goalsAgainst) - (a[1].goalsFor - a[1].goalsAgainst);
+      });
+
+      sortedPlayers.forEach(([player, data], index) => {
+        const row = document.createElement("tr");
+        if (index === 0) row.classList.add("gold");
+        else if (index === 1) row.classList.add("silver");
+        else if (index === 2) row.classList.add("bronze");
+        
+        const winPercentage = data.played > 0 
+          ? Math.round((data.won / data.played) * 100) + "%" 
+          : "0%";
+        
+        row.innerHTML = `
+          <td>${index + 1}</td>
+          <td><strong>${player}</strong></td>
+          <td>${data.played}</td>
+          <td>${data.won}</td>
+          <td>${winPercentage}</td>
+          <td><strong>${data.goalsFor}</strong></td>
+          <td>${data.goalsAgainst}</td>
+        `;
+        leaderboard.appendChild(row);
+      });
+    }
+
+    function filterMatches() {
+      const allMatches = document.querySelectorAll(".match");
+      allMatches.forEach((match, index) => {
+        const [team1, team2] = matches[index];
+        const allPlayers = [...team1, ...team2];
+        const shouldShow = activeFilters.size === 0 || 
+          [...activeFilters].every(player => allPlayers.includes(player));
+        match.classList.toggle("hidden", !shouldShow);
+      });
+    }
 
     // INIZIALIZZAZIONE
-    async function initialize() {
+    document.addEventListener("DOMContentLoaded", async () => {
       try {
         initStats();
         await loadScoresFromGist();
@@ -196,13 +318,24 @@
         
         document.getElementById("loading").style.display = "none";
         document.getElementById("app-content").style.display = "flex";
+        
+        // Collega il pulsante di salvataggio
+        document.getElementById("save-button").addEventListener("click", saveScoresToGist);
+        
       } catch (error) {
         console.error("Errore inizializzazione:", error);
-        showError("Errore nell'avvio dell'applicazione. Ricarica la pagina.");
+        showError("Errore nel caricamento. Usando dati locali...");
+        
+        // Fallback completo
+        initStats();
+        renderFilters();
+        renderMatches();
+        calculateAllStats();
+        
+        document.getElementById("loading").style.display = "none";
+        document.getElementById("app-content").style.display = "flex";
       }
-    }
-
-    document.addEventListener("DOMContentLoaded", initialize);
+    });
   </script>
 </body>
 </html>
