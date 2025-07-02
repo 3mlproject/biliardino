@@ -1,0 +1,2 @@
+// Dati del torneo. Questo file viene sovrascritto dal programma.
+var savedScores = {};
