@@ -1,489 +1,485 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>TORNEO DI BILIARDINO</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: Arial, sans-serif; background-color: #f1f5e3; margin: 0; padding: 0; }
-    header { background-color: #0e7546; color: white; text-align: center; padding: 1.5rem 0; font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; letter-spacing: 2px; }
-    .container { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
-    #matches-container, .standings { flex: 1; background: #fff; border-radius: 8px; padding: 15px; overflow-y: auto; }
-    .standings h2, #matches-container h2 { text-align: center; text-transform: uppercase; }
-    .match {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: #fff;
-      padding: 10px 15px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      margin-bottom: 10px;
-      transition: background 0.3s;
-      flex-wrap: wrap; /* Permette il wrap degli elementi su schermi piccoli */
-    }
-    .match.played { background: #d2f8d2; }
-    .match.played .player-names { color: #555; } /* Make player names lighter */
-    .hidden { display: none !important; }
-    .score-input { width: 3rem; text-align: center; font-size: 1rem; }
-    .score-section {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-grow: 1; /* Permette alla sezione score di occupare spazio */
-      justify-content: flex-end; /* Allinea a destra gli elementi dello score */
-    }
-    .filter-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; justify-content: center; margin-bottom: 30px; }
-    .filter-btn { padding: 5px 10px; background: #ccc; border: none; border-radius: 5px; cursor: pointer; }
-    .filter-btn.active { background: #a3d9a5; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
-    th { background-color: #e7f5e7; color: #0e7546; }
-    .submit-btn, .edit-btn, #save-button { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
-    .edit-btn { background-color: #66bb6a; } /* Changed to a less visible green */
-    #save-button { background: #0e7546; display: block; margin: 20px auto 30px; padding: 8px 15px; font-size: 0.8rem; } /* Changed color, font size and increased bottom margin */
-    .gold { background-color: #fff8dc !important; }
-    .silver { background-color: #f5f5f5 !important; }
-    .bronze { background-color: #fcebd0 !important; }
-    @media (max-width: 768px) { .row { flex-direction: column; } }
+  <meta charset="UTF-8">
+  <title>TORNEO DI BILIARDINO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f1f5e3; margin: 0; padding: 0; }
+    header { background-color: #0e7546; color: white; text-align: center; padding: 1.5rem 0; font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; letter-spacing: 2px; }
+    .container { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
+    #matches-container, .standings { flex: 1; background: #fff; border-radius: 8px; padding: 15px; overflow-y: auto; }
+    .standings h2, #matches-container h2 { text-align: center; text-transform: uppercase; }
+    .match {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      padding: 10px 15px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      transition: background 0.3s;
+      flex-wrap: wrap; /* Permette il wrap degli elementi su schermi piccoli */
+    }
+    .match.played { background: #d2f8d2; }
+    .match.played .player-names { color: #555; } /* Make player names lighter */
+    .hidden { display: none !important; }
+    .score-input { width: 3rem; text-align: center; font-size: 1rem; }
+    .score-section {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-grow: 1; /* Permette alla sezione score di occupare spazio */
+      justify-content: flex-end; /* Allinea a destra gli elementi dello score */
+    }
+    .filter-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; justify-content: center; margin-bottom: 30px; }
+    .filter-btn { padding: 5px 10px; background: #ccc; border: none; border-radius: 5px; cursor: pointer; }
+    .filter-btn.active { background: #a3d9a5; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #e7f5e7; color: #0e7546; }
+    .submit-btn, .edit-btn { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    .edit-btn { background-color: #66bb6a; } /* Changed to a less visible green */
+    .gold { background-color: #fff8dc !important; }
+    .silver { background-color: #f5f5f5 !important; }
+    .bronze { background-color: #fcebd0 !important; }
+    @media (max-width: 768px) { .row { flex-direction: column; } }
 
-    /* --- STILI AGGIORNATI PER IL PULSANTE INIZIA PARTITA --- */
-    .draw-button {
-      background-color: #0e7546; /* Verde scuro */
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 5px;
-      cursor: pointer;
-      margin-right: 10px; /* Spazio a destra per separarlo dagli input */
-    }
+    /* --- STILI AGGIORNATI PER IL PULSANTE INIZIA PARTITA --- */
+    .draw-button {
+      background-color: #0e7546; /* Verde scuro */
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-right: 10px; /* Spazio a destra per separarlo dagli input */
+    }
 
-    .draw-button:hover {
-      background-color: #0c633a; /* Verde scuro leggermente più scuro al hover */
-    }
+    .draw-button:hover {
+      background-color: #0c633a; /* Verde scuro leggermente più scuro al hover */
+    }
 
-    /* Stili per i pallini */
-    .team-color-indicator {
-      display: inline-block;
-      width: 15px; /* Dimensione del pallino */
-      height: 15px; /* Dimensione del pallino */
-      border-radius: 50%; /* Rende il div un cerchio */
-      background-color: black; /* Colore iniziale dei pallini */
-      margin-right: 5px;
-      vertical-align: middle; /* Allinea con il testo */
-      transition: background-color 0.1s ease-in-out; /* Transizione per il colore */
-    }
+    /* Stili per i pallini */
+    .team-color-indicator {
+      display: inline-block;
+      width: 15px; /* Dimensione del pallino */
+      height: 15px; /* Dimensione del pallino */
+      border-radius: 50%; /* Rende il div un cerchio */
+      background-color: black; /* Colore iniziale dei pallini */
+      margin-right: 5px;
+      vertical-align: middle; /* Allinea con il testo */
+      transition: background-color 0.1s ease-in-out; /* Transizione per il colore */
+    }
 
-    /* Classi per il colore finale dei pallini */
-    .team-color-indicator.final-blue {
-      background-color: blue !important; /* Aggiunto !important per priorità */
-    }
-    .team-color-indicator.final-red {
-      background-color: red !important; /* Aggiunto !important per priorità */
-    }
+    /* Classi per il colore finale dei pallini */
+    .team-color-indicator.final-blue {
+      background-color: blue !important; /* Aggiunto !important per priorità */
+    }
+    .team-color-indicator.final-red {
+      background-color: red !important; /* Aggiunto !important per priorità */
+    }
 
-    /* Layout per i nomi delle squadre e i pulsanti */
-    .player-names-section {
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      flex-grow: 1; /* Permette alla sezione dei nomi di occupare spazio */
-      min-width: 200px; /* Evita che si comprima troppo */
-    }
+    /* Layout per i nomi delle squadre e i pulsanti */
+    .player-names-section {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-grow: 1; /* Permette alla sezione dei nomi di occupare spazio */
+      min-width: 200px; /* Evita che si comprima troppo */
+    }
 
-    .player-names {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-    }
+    .player-names {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
 
-    /* --- NUOVI STILI PER NASCONDERE IL PULSANTE E ALLINEARE I NOMI --- */
-    .match.match-started .draw-button {
-        display: none; /* Nasconde il pulsante una volta che il match è "iniziato" */
-    }
+    /* --- NUOVI STILI PER NASCONDERE IL PULSANTE E ALLINEARE I NOMI --- */
+    .match.match-started .draw-button {
+        display: none; /* Nasconde il pulsante una volta che il match è "iniziato" */
+    }
 
-    .match.match-started .player-names-section {
-        justify-content: flex-start; /* Allinea i nomi a sinistra */
-    }
+    .match.match-started .player-names-section {
+        justify-content: flex-start; /* Allinea i nomi a sinistra */
+    }
 
-    /* Assicurati che i nomi prendano lo spazio disponibile quando il pulsante sparisce */
-    .match.match-started .player-names {
-        flex-grow: 1;
-    }
+    /* Assicurati che i nomi prendano lo spazio disponibile quando il pulsante sparisce */
+    .match.match-started .player-names {
+        flex-grow: 1;
+    }
 
-  </style>
+  </style>
 </head>
 <body>
-  <header>TORNEO DI BILIARDINO</header>
+  <header>TORNEO DI BILIARDINO</header>
 
-    <div class="container">
-    <div class="standings">
-      <h2>Classifica</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Posizione</th><th>Giocatore</th><th>Giocate</th><th>Vinte</th><th>% Vittorie</th><th>Segnati</th><th>Subiti</th>
-          </tr>
-        </thead>
-        <tbody id="leaderboard"></tbody>
-      </table>
-    </div>
-    <div id="matches-container">
-      <h2>Partite</h2>
-      <div class="filter-buttons" id="player-and-status-filters"></div>
-      <div id="matches"></div>
-    </div>
-  </div>
-  <button id="save-button" onclick="saveScoresToFile()">ESPORTA PUNTEGGIO</button>
-  <script src="punteggi.js"></script>
-  <script>
-    if (typeof savedScores === 'undefined') {
-      var savedScores = {};
-    }
+    <div class="container">
+    <div class="standings">
+      <h2>Classifica</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Posizione</th><th>Giocatore</th><th>Giocate</th><th>Vinte</th><th>% Vittorie</th><th>Segnati</th><th>Subiti</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard"></tbody>
+      </table>
+    </div>
+    <div id="matches-container">
+      <h2>Partite</h2>
+      <div class="filter-buttons" id="player-and-status-filters"></div>
+      <div id="matches"></div>
+    </div>
+  </div>
+  <script>
+    // Funzione per caricare i punteggi da localStorage
+    function loadScores() {
+      const storedScores = localStorage.getItem('foosballScores');
+      return storedScores ? JSON.parse(storedScores) : {};
+    }
 
-    const players = ["CHIARA", "FRENKIE", "IRE", "KLM", "LUCA", "TEO"];
-    let stats = Object.fromEntries(players.map(p => [p, {      points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0    }]));
+    // Funzione per salvare i punteggi in localStorage
+    function saveScores() {
+      localStorage.setItem('foosballScores', JSON.stringify(savedScores));
+    }
 
-    const matches = [
-      ["CHIARA", "FRENKIE", "IRE", "KLM"], ["CHIARA", "FRENKIE", "IRE", "LUCA"], ["CHIARA", "FRENKIE", "IRE", "TEO"],
-      ["CHIARA", "FRENKIE", "KLM", "LUCA"], ["CHIARA", "FRENKIE", "KLM", "TEO"], ["CHIARA", "FRENKIE", "LUCA", "TEO"],
-      ["CHIARA", "IRE", "FRENKIE", "KLM"], ["CHIARA", "IRE", "FRENKIE", "LUCA"], ["CHIARA", "IRE", "FRENKIE", "TEO"],
-      ["CHIARA", "IRE", "KLM", "LUCA"], ["CHIARA", "IRE", "KLM", "TEO"], ["CHIARA", "IRE", "LUCA", "TEO"],
-      ["CHIARA", "KLM", "FRENKIE", "IRE"], ["CHIARA", "KLM", "FRENKIE", "LUCA"], ["CHIARA", "KLM", "FRENKIE", "TEO"],
-      ["CHIARA", "KLM", "IRE", "LUCA"], ["CHIARA", "KLM", "IRE", "TEO"], ["CHIARA", "KLM", "LUCA", "TEO"],
-      ["CHIARA", "LUCA", "FRENKIE", "IRE"], ["CHIARA", "LUCA", "FRENKIE", "KLM"], ["CHIARA", "LUCA", "FRENKIE", "TEO"],
-      ["CHIARA", "LUCA", "IRE", "KLM"], ["CHIARA", "LUCA", "IRE", "TEO"], ["CHIARA", "LUCA", "KLM", "TEO"],
-      ["CHIARA", "TEO", "FRENKIE", "IRE"], ["CHIARA", "TEO", "FRENKIE", "KLM"], ["CHIARA", "TEO", "FRENKIE", "LUCA"],
-      ["CHIARA", "TEO", "IRE", "KLM"], ["CHIARA", "TEO", "IRE", "LUCA"], ["CHIARA", "TEO", "KLM", "LUCA"],
-      ["FRENKIE", "IRE", "KLM", "LUCA"], ["FRENKIE", "IRE", "KLM", "TEO"], ["FRENKIE", "IRE", "LUCA", "TEO"],
-      ["FRENKIE", "KLM", "IRE", "LUCA"], ["FRENKIE", "KLM", "IRE", "TEO"], ["FRENKIE", "KLM", "LUCA", "TEO"],
-      ["FRENKIE", "LUCA", "IRE", "KLM"], ["FRENKIE", "LUCA", "IRE", "TEO"], ["FRENKIE", "LUCA", "KLM", "TEO"],
-      ["FRENKIE", "TEO", "IRE", "KLM"], ["FRENKIE", "TEO", "IRE", "LUCA"], ["FRENKIE", "TEO", "KLM", "LUCA"],
-      ["IRE", "KLM", "LUCA", "TEO"], ["IRE", "LUCA", "KLM", "TEO"], ["IRE", "TEO", "KLM", "LUCA"]
-    ].map(([a1, a2, b1, b2]) => [[a1, a2], [b1, b2]]);
+    let savedScores = loadScores(); // Carica i punteggi all'avvio
 
-    const activePlayerFilters = new Set();
-    let currentMatchStatusFilter = 'all'; // 'all', 'played', 'unplayed'
+    const players = ["CHIARA", "FRENKIE", "IRE", "KLM", "LUCA", "TEO"];
+    let stats = Object.fromEntries(players.map(p => [p, {      points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0    }]));
 
-    // Funzione per rendere i filtri (giocatori e stato partita)
-    function renderFilters(){
-      const filterContainer = document.getElementById("player-and-status-filters");
-      filterContainer.innerHTML = "";
+    const matches = [
+      ["CHIARA", "FRENKIE", "IRE", "KLM"], ["CHIARA", "FRENKIE", "IRE", "LUCA"], ["CHIARA", "FRENKIE", "IRE", "TEO"],
+      ["CHIARA", "FRENKIE", "KLM", "LUCA"], ["CHIARA", "FRENKIE", "KLM", "TEO"], ["CHIARA", "FRENKIE", "LUCA", "TEO"],
+      ["CHIARA", "IRE", "FRENKIE", "KLM"], ["CHIARA", "IRE", "FRENKIE", "LUCA"], ["CHIARA", "IRE", "FRENKIE", "TEO"],
+      ["CHIARA", "IRE", "KLM", "LUCA"], ["CHIARA", "IRE", "KLM", "TEO"], ["CHIARA", "IRE", "LUCA", "TEO"],
+      ["CHIARA", "KLM", "FRENKIE", "IRE"], ["CHIARA", "KLM", "FRENKIE", "LUCA"], ["CHIARA", "KLM", "FRENKIE", "TEO"],
+      ["CHIARA", "KLM", "IRE", "LUCA"], ["CHIARA", "KLM", "IRE", "TEO"], ["CHIARA", "KLM", "LUCA", "TEO"],
+      ["CHIARA", "LUCA", "FRENKIE", "IRE"], ["CHIARA", "LUCA", "FRENKIE", "KLM"], ["CHIARA", "LUCA", "FRENKIE", "TEO"],
+      ["CHIARA", "LUCA", "IRE", "KLM"], ["CHIARA", "LUCA", "IRE", "TEO"], ["CHIARA", "LUCA", "KLM", "TEO"],
+      ["CHIARA", "TEO", "FRENKIE", "IRE"], ["CHIARA", "TEO", "FRENKIE", "KLM"], ["CHIARA", "TEO", "FRENKIE", "LUCA"],
+      ["CHIARA", "TEO", "IRE", "KLM"], ["CHIARA", "TEO", "IRE", "LUCA"], ["CHIARA", "TEO", "KLM", "LUCA"],
+      ["FRENKIE", "IRE", "KLM", "LUCA"], ["FRENKIE", "IRE", "KLM", "TEO"], ["FRENKIE", "IRE", "LUCA", "TEO"],
+      ["FRENKIE", "KLM", "IRE", "LUCA"], ["FRENKIE", "KLM", "IRE", "TEO"], ["FRENKIE", "KLM", "LUCA", "TEO"],
+      ["FRENKIE", "LUCA", "IRE", "KLM"], ["FRENKIE", "LUCA", "IRE", "TEO"], ["FRENKIE", "LUCA", "KLM", "TEO"],
+      ["FRENKIE", "TEO", "IRE", "KLM"], ["FRENKIE", "TEO", "IRE", "LUCA"], ["FRENKIE", "TEO", "KLM", "LUCA"],
+      ["IRE", "KLM", "LUCA", "TEO"], ["IRE", "LUCA", "KLM", "TEO"], ["IRE", "TEO", "KLM", "LUCA"]
+    ].map(([a1, a2, b1, b2]) => [[a1, a2], [b1, b2]]);
 
-      // Filtri per i giocatori
-      players.forEach(p => {
-        const btn = document.createElement("button");
-        btn.textContent = p;
-        btn.className = "filter-btn";
-        if (activePlayerFilters.has(p)) {
-          btn.classList.add('active');
-        }
-        btn.onclick = () => {
-          btn.classList.toggle("active");
-          activePlayerFilters.has(p) ? activePlayerFilters.delete(p) : activePlayerFilters.add(p);
-          filterMatches();
-        };
-        filterContainer.appendChild(btn);
-      });
+    const activePlayerFilters = new Set();
+    let currentMatchStatusFilter = 'all'; // 'all', 'played', 'unplayed'
 
-      // Filtri per lo stato della partita (Giocate/Da Giocare)
-      const statusFilters = [
-        { text: "TUTTE LE PARTITE", value: "all" },
-        { text: "PARTITE GIOCATE", value: "played" },
-        { text: "PARTITE DA GIOCARE", value: "unplayed" }
-      ];
+    // Funzione per rendere i filtri (giocatori e stato partita)
+    function renderFilters(){
+      const filterContainer = document.getElementById("player-and-status-filters");
+      filterContainer.innerHTML = "";
 
-      statusFilters.forEach(filter => {
-        const btn = document.createElement("button");
-        btn.textContent = filter.text;
-        btn.className = "filter-btn";
-        if (currentMatchStatusFilter === filter.value) {
-          btn.classList.add('active');
-        }
-        btn.onclick = () => {
-          currentMatchStatusFilter = filter.value;
-          renderFilters(); // Ri-renderizza i filtri per aggiornare lo stato "active"
-          filterMatches();
-        };
-        filterContainer.appendChild(btn);
-      });
-    }
+      // Filtri per i giocatori
+      players.forEach(p => {
+        const btn = document.createElement("button");
+        btn.textContent = p;
+        btn.className = "filter-btn";
+        if (activePlayerFilters.has(p)) {
+          btn.classList.add('active');
+        }
+        btn.onclick = () => {
+          btn.classList.toggle("active");
+          activePlayerFilters.has(p) ? activePlayerFilters.delete(p) : activePlayerFilters.add(p);
+          filterMatches();
+        };
+        filterContainer.appendChild(btn);
+      });
 
-    function renderMatches(){
-      const c=document.getElementById("matches");
-      c.innerHTML="";
-      matches.forEach(([e,t],l)=>{
-        const s=document.createElement("div");
-        s.className="match";
-        const a=savedScores[l];
+      // Filtri per lo stato della partita (Giocate/Da Giocare)
+      const statusFilters = [
+        { text: "TUTTE LE PARTITE", value: "all" },
+        { text: "PARTITE GIOCATE", value: "played" },
+        { text: "PARTITE DA GIOCARE", value: "unplayed" }
+      ];
 
-        // Determina se il match è stato giocato
-        const isPlayed = a && (a.s1 !== 0 || a.s2 !== 0);
+      statusFilters.forEach(filter => {
+        const btn = document.createElement("button");
+        btn.textContent = filter.text;
+        btn.className = "filter-btn";
+        if (currentMatchStatusFilter === filter.value) {
+          btn.classList.add('active');
+        }
+        btn.onclick = () => {
+          currentMatchStatusFilter = filter.value;
+          renderFilters(); // Ri-renderizza i filtri per aggiornare lo stato "active"
+          filterMatches();
+        };
+        filterContainer.appendChild(btn);
+      });
+    }
 
-        // Aggiungi o rimuovi la classe 'played' e 'match-started'
-        if (isPlayed) {
-            s.classList.add("played");
-            s.classList.add("match-started"); // Se giocato, il sorteggio è avvenuto, quindi il pulsante deve essere nascosto
-        } else {
-            s.classList.remove("played");
-            s.classList.remove("match-started"); // Se non giocato, il pulsante deve essere visibile
-        }
+    function renderMatches(){
+      const c=document.getElementById("matches");
+      c.innerHTML="";
+      matches.forEach(([e,t],l)=>{
+        const s=document.createElement("div");
+        s.className="match";
+        const a=savedScores[l];
 
-        // Recupera i colori finali dai savedScores se esistono
-        const team1FinalColorClass = a?.team1Color || '';
-        const team2FinalColorClass = a?.team2Color || '';
+        // Determina se il match è stato giocato
+        const isPlayed = a && (a.s1 !== 0 || a.s2 !== 0);
 
-        s.innerHTML=`
-          <div class="player-names-section">
-            <button class="draw-button" onclick="startMatchDraw(${l})" ${isPlayed ? 'disabled' : ''}>Inizia Partita</button>
-            <div class="player-names">
-              <span id="team1-indicator-${l}" class="team-color-indicator ${team1FinalColorClass}"></span> ${e.join(" & ")} vs
-              <span id="team2-indicator-${l}" class="team-color-indicator ${team2FinalColorClass}"></span> ${t.join(" & ")}
-            </div>
-          </div>
-          <div class="score-section">
-            <input type="number" id="s1-${l}" class="score-input" min="0" max="10" value="${a?.s1||""}" ${a?"disabled":""}>
-            -
-            <input type="number" id="s2-${l}" class="score-input" min="0" max="10" value="${a?.s2||""}" ${a?"disabled":""}>
-            <button id="submit-btn-${l}" class="submit-btn" onclick="submitScore(${l})" style="display: ${a?"none":"inline-block"};">OK</button>
-            <button id="edit-btn-${l}" class="edit-btn" onclick="editScore(${l})" style="display: ${a?"inline-block":"none"};">Modifica</button>
-          </div>
-        `;
-        c.appendChild(s);
-      });
-    }
+        // Aggiungi o rimuovi la classe 'played' e 'match-started'
+        if (isPlayed) {
+            s.classList.add("played");
+            s.classList.add("match-started"); // Se giocato, il sorteggio è avvenuto, quindi il pulsante deve essere nascosto
+        } else {
+            s.classList.remove("played");
+            s.classList.remove("match-started"); // Se non giocato, il pulsante deve essere visibile
+        }
 
-    function editScore(c){
-        document.getElementById(`s1-${c}`).disabled=!1;
-        document.getElementById(`s2-${c}`).disabled=!1;
-        document.getElementById(`submit-btn-${c}`).style.display="inline-block";
-        document.getElementById(`edit-btn-${c}`).style.display="none";
-        // Quando si modifica, il pulsante Inizia Partita deve riapparire se il punteggio è 0-0.
-        // Altrimenti, se il punteggio è già valido, il sorteggio è già avvenuto e il pulsante rimane nascosto.
-        const matchElement = document.getElementById("matches").children[c];
-        const drawButton = matchElement.querySelector('.draw-button');
-        if (savedScores[c] && (savedScores[c].s1 === 0 && savedScores[c].s2 === 0)) {
-            drawButton.disabled = false; // Riabilita se il punteggio è 0-0
-            matchElement.classList.remove("match-started"); // Mostra il pulsante
-        } else {
-            drawButton.disabled = true; // Mantieni disabilitato se c'è un punteggio valido
-            matchElement.classList.add("match-started"); // Mantieni nascosto il pulsante
-        }
-    }
+        // Recupera i colori finali dai savedScores se esistono
+        const team1FinalColorClass = a?.team1Color || '';
+        const team2FinalColorClass = a?.team2Color || '';
 
-    function submitScore(c){
-      const e=document.getElementById(`s1-${c}`);
-      const t=document.getElementById(`s2-${c}`);
-      const l=parseInt(e.value);
-      const s=parseInt(t.value);
-      const matchElement = document.getElementById("matches").children[c];
-      const drawButton = matchElement.querySelector('.draw-button');
-      const team1Indicator = document.getElementById(`team1-indicator-${c}`);
-      const team2Indicator = document.getElementById(`team2-indicator-${c}`);
+        s.innerHTML=`
+          <div class="player-names-section">
+            <button class="draw-button" onclick="startMatchDraw(${l})" ${isPlayed ? 'disabled' : ''}>Inizia Partita</button>
+            <div class="player-names">
+              <span id="team1-indicator-${l}" class="team-color-indicator ${team1FinalColorClass}"></span> ${e.join(" & ")} vs
+              <span id="team2-indicator-${l}" class="team-color-indicator ${team2FinalColorClass}"></span> ${t.join(" & ")}
+            </div>
+          </div>
+          <div class="score-section">
+            <input type="number" id="s1-${l}" class="score-input" min="0" max="10" value="${a?.s1||""}" ${a?"disabled":""}>
+            -
+            <input type="number" id="s2-${l}" class="score-input" min="0" max="10" value="${a?.s2||""}" ${a?"disabled":""}>
+            <button id="submit-btn-${l}" class="submit-btn" onclick="submitScore(${l})" style="display: ${a?"none":"inline-block"};">OK</button>
+            <button id="edit-btn-${l}" class="edit-btn" onclick="editScore(${l})" style="display: ${a?"inline-block":"none"};">Modifica</button>
+          </div>
+        `;
+        c.appendChild(s);
+      });
+    }
 
-      if(!isNaN(l)&&!isNaN(s)){
-        // Se il punteggio è 0-0, non considerarlo come "giocato" e rimuovilo dai savedScores
-        if (l === 0 && s === 0) {
-            if (savedScores[c] && (savedScores[c].s1 !== 0 || savedScores[c].s2 !== 0)) { // Se esisteva già un punteggio valido
-                if (!confirm("Sei sicuro di voler resettare il punteggio a 0-0? Questo lo rimuoverà dalle partite giocate.")) {
-                    e.value = savedScores[c].s1; // Ripristina il valore precedente
-                    t.value = savedScores[c].s2; // Ripristina il valore precedente
-                    return; // Esci senza fare modifiche
-                }
-            }
-            delete savedScores[c]; // Rimuovi l'entry
-            drawButton.disabled = false; // Riabilita il pulsante Inizia Partita
-            matchElement.classList.remove("match-started"); // Mostra il pulsante "Inizia Partita"
-            // Resetta i colori dei pallini a nero e rimuovi classi finali
-            team1Indicator.className = 'team-color-indicator'; // Rimuove tutte le classi finali
-            team2Indicator.className = 'team-color-indicator'; // Rimuove tutte le classi finali
-            team1Indicator.style.backgroundColor = 'black'; // Assicurati che tornino neri
-            team2Indicator.style.backgroundColor = 'black';
-        } else {
-            // Se esiste un punteggio valido, salvalo
-            savedScores[c] = { s1: l, s2: s };
-            // Mantiene i colori dei pallini estratti se sono stati sorteggiati
-            // Se il sorteggio è stato fatto, le classi finali sono già applicate e saranno salvate.
-            // Se non è stato fatto, non ci saranno classi finali, e i pallini saranno neri per default.
-            if (team1Indicator.classList.contains('final-blue')) {
-                savedScores[c].team1Color = 'final-blue';
-                savedScores[c].team2Color = 'final-red';
-            } else if (team1Indicator.classList.contains('final-red')) {
-                savedScores[c].team1Color = 'final-red';
-                savedScores[c].team2Color = 'final-blue';
-            } else { // Caso in cui il punteggio viene inserito senza sorteggio (pallini neri)
-                savedScores[c].team1Color = '';
-                savedScores[c].team2Color = '';
-            }
+    function editScore(c){
+        document.getElementById(`s1-${c}`).disabled=!1;
+        document.getElementById(`s2-${c}`).disabled=!1;
+        document.getElementById(`submit-btn-${c}`).style.display="inline-block";
+        document.getElementById(`edit-btn-${c}`).style.display="none";
+        // Quando si modifica, il pulsante Inizia Partita deve riapparire se il punteggio è 0-0.
+        // Altrimenti, se il punteggio è già valido, il sorteggio è già avvenuto e il pulsante rimane nascosto.
+        const matchElement = document.getElementById("matches").children[c];
+        const drawButton = matchElement.querySelector('.draw-button');
+        if (savedScores[c] && (savedScores[c].s1 === 0 && savedScores[c].s2 === 0)) {
+            drawButton.disabled = false; // Riabilita se il punteggio è 0-0
+            matchElement.classList.remove("match-started"); // Mostra il pulsante
+        } else {
+            drawButton.disabled = true; // Mantieni disabilitato se c'è un punteggio valido
+            matchElement.classList.add("match-started"); // Mantieni nascosto il pulsante
+        }
+    }
 
-            drawButton.disabled = true; // Disabilita il pulsante Inizia Partita se il match è giocato
-            matchElement.classList.add("match-started"); // Nasconde il pulsante "Inizia Partita"
-        }
+    function submitScore(c){
+      const e=document.getElementById(`s1-${c}`);
+      const t=document.getElementById(`s2-${c}`);
+      const l=parseInt(e.value);
+      const s=parseInt(t.value);
+      const matchElement = document.getElementById("matches").children[c];
+      const drawButton = matchElement.querySelector('.draw-button');
+      const team1Indicator = document.getElementById(`team1-indicator-${c}`);
+      const team2Indicator = document.getElementById(`team2-indicator-${c}`);
 
-        // Applica/rimuovi la classe 'played'
-        if (savedScores[c] && (savedScores[c].s1 !== 0 || savedScores[c].s2 !== 0)) {
-            matchElement.classList.add('played');
-        } else {
-            matchElement.classList.remove('played');
-        }
+      if(!isNaN(l)&&!isNaN(s)){
+        // Se il punteggio è 0-0, non considerarlo come "giocato" e rimuovilo dai savedScores
+        if (l === 0 && s === 0) {
+            if (savedScores[c] && (savedScores[c].s1 !== 0 || savedScores[c].s2 !== 0)) { // Se esisteva già un punteggio valido
+                if (!confirm("Sei sicuro di voler resettare il punteggio a 0-0? Questo lo rimuoverà dalle partite giocate.")) {
+                    e.value = savedScores[c].s1; // Ripristina il valore precedente
+                    t.value = savedScores[c].s2; // Ripristina il valore precedente
+                    return; // Esci senza fare modifiche
+                }
+            }
+            delete savedScores[c]; // Rimuovi l'entry
+            drawButton.disabled = false; // Riabilita il pulsante Inizia Partita
+            matchElement.classList.remove("match-started"); // Mostra il pulsante "Inizia Partita"
+            // Resetta i colori dei pallini a nero e rimuovi classi finali
+            team1Indicator.className = 'team-color-indicator'; // Rimuove tutte le classi finali
+            team2Indicator.className = 'team-color-indicator'; // Rimuove tutte le classi finali
+            team1Indicator.style.backgroundColor = 'black'; // Assicurati che tornino neri
+            team2Indicator.style.backgroundColor = 'black';
+        } else {
+            // Se esiste un punteggio valido, salvalo
+            savedScores[c] = { s1: l, s2: s };
+            // Mantiene i colori dei pallini estratti se sono stati sorteggiati
+            // Se il sorteggio è stato fatto, le classi finali sono già applicate e saranno salvate.
+            // Se non è stato fatto, non ci saranno classi finali, e i pallini saranno neri per default.
+            if (team1Indicator.classList.contains('final-blue')) {
+                savedScores[c].team1Color = 'final-blue';
+                savedScores[c].team2Color = 'final-red';
+            } else if (team1Indicator.classList.contains('final-red')) {
+                savedScores[c].team1Color = 'final-red';
+                savedScores[c].team2Color = 'final-blue';
+            } else { // Caso in cui il punteggio viene inserito senza sorteggio (pallini neri)
+                savedScores[c].team1Color = '';
+                savedScores[c].team2Color = '';
+            }
 
-        e.disabled = true;
-        t.disabled = true;
-        document.getElementById(`submit-btn-${c}`).style.display = "none";
-        document.getElementById(`edit-btn-${c}`).style.display = "inline-block";
+            drawButton.disabled = true; // Disabilita il pulsante Inizia Partita se il match è giocato
+            matchElement.classList.add("match-started"); // Nasconde il pulsante "Inizia Partita"
+        }
 
-        calculateAllStats();
-        filterMatches(); // Ri-filtra per aggiornare la visualizzazione
-      }
-    }
+        // Applica/rimuovi la classe 'played'
+        if (savedScores[c] && (savedScores[c].s1 !== 0 || savedScores[c].s2 !== 0)) {
+            matchElement.classList.add('played');
+        } else {
+            matchElement.classList.remove('played');
+        }
+        saveScores(); // Salva i punteggi dopo ogni modifica
+        e.disabled = true;
+        t.disabled = true;
+        document.getElementById(`submit-btn-${c}`).style.display = "none";
+        document.getElementById(`edit-btn-${c}`).style.display = "inline-block";
 
-    function calculateAllStats(){
-        stats=Object.fromEntries(players.map(c=>[c,{points:0,played:0,won:0,goalsFor:0,goalsAgainst:0}]));
-        Object.entries(savedScores).forEach(([c,e])=>{
-            const [t,l]=matches[c];
-            const s=e.s1;
-            const a=e.s2;
-            if (s !== 0 || a !== 0) { // Solo se il match ha un punteggio valido (non 0-0)
-                t.forEach(c=>{stats[c].played++; stats[c].points+=s; stats[c].goalsFor+=s; stats[c].goalsAgainst+=a});
-                l.forEach(c=>{stats[c].played++; stats[c].points+=a; stats[c].goalsFor+=a; stats[c].goalsAgainst+=s});
-                s>a?t.forEach(c=>stats[c].won++):a>s&&l.forEach(c=>stats[c].won++);
-            }
-        });
-        updateLeaderboard();
-    }
+        calculateAllStats();
+        filterMatches(); // Ri-filtra per aggiornare la visualizzazione
+      }
+    }
 
-    function updateLeaderboard(){const c=document.getElementById("leaderboard");c.innerHTML="";const e=Object.entries(stats).sort((c,e)=>e[1].points!==c[1].points?e[1].points-c[1].points:e[1].goalsFor-e[1].goalsAgainst-(c[1].goalsFor-c[1].goalsAgainst));e.forEach(([e,t],l)=>{const s=t.played>0?Math.round(t.won/t.played*100)+"%":"0%",a=document.createElement("tr");0===l?a.classList.add("gold"):1===l?a.classList.add("silver"):2===l&&a.classList.add("bronze"),a.innerHTML=`<td>${l+1}</td><td><strong>${e}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td><td><strong>${t.goalsFor}</strong></td><td>${t.goalsAgainst}</td>`,c.appendChild(a)})}
+    function calculateAllStats(){
+        stats=Object.fromEntries(players.map(c=>[c,{points:0,played:0,won:0,goalsFor:0,goalsAgainst:0}]));
+        Object.entries(savedScores).forEach(([c,e])=>{
+            const [t,l]=matches[c];
+            const s=e.s1;
+            const a=e.s2;
+            if (s !== 0 || a !== 0) { // Solo se il match ha un punteggio valido (non 0-0)
+                t.forEach(c=>{stats[c].played++; stats[c].points+=s; stats[c].goalsFor+=s; stats[c].goalsAgainst+=a});
+                l.forEach(c=>{stats[c].played++; stats[c].points+=a; stats[c].goalsFor+=a; stats[c].goalsAgainst+=s});
+                s>a?t.forEach(c=>stats[c].won++):a>s&&l.forEach(c=>stats[c].won++);
+            }
+        });
+        updateLeaderboard();
+    }
 
-    function filterMatches(){
-      const allMatches = document.querySelectorAll("#matches .match"); // Seleziona tutti gli elementi .match
+    function updateLeaderboard(){const c=document.getElementById("leaderboard");c.innerHTML="";const e=Object.entries(stats).sort((c,e)=>e[1].points!==c[1].points?e[1].points-c[1].points:e[1].goalsFor-e[1].goalsAgainst-(c[1].goalsFor-c[1].goalsAgainst));e.forEach(([e,t],l)=>{const s=t.played>0?Math.round(t.won/t.played*100)+"%":"0%",a=document.createElement("tr");0===l?a.classList.add("gold"):1===l?a.classList.add("silver"):2===l&&a.classList.add("bronze"),a.innerHTML=`<td>${l+1}</td><td><strong>${e}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td><td><strong>${t.goalsFor}</strong></td><td>${t.goalsAgainst}</td>`,c.appendChild(a)})}
 
-      allMatches.forEach((matchElement, index) => {
-        const [team1, team2] = matches[index];
-        const allPlayersInMatch = [...team1, ...team2];
-        const isMatchPlayed = savedScores[index] && (savedScores[index].s1 !== 0 || savedScores[index].s2 !== 0);
+    function filterMatches(){
+      const allMatches = document.querySelectorAll("#matches .match"); // Seleziona tutti gli elementi .match
 
-        // Filtro per giocatori
-        const passesPlayerFilter = activePlayerFilters.size === 0 || [...activePlayerFilters].every(player => allPlayersInMatch.includes(player));
+      allMatches.forEach((matchElement, index) => {
+        const [team1, team2] = matches[index];
+        const allPlayersInMatch = [...team1, ...team2];
+        const isMatchPlayed = savedScores[index] && (savedScores[index].s1 !== 0 || savedScores[index].s2 !== 0);
 
-        // Filtro per stato partita
-        let passesStatusFilter = true;
-        if (currentMatchStatusFilter === 'played') {
-          passesStatusFilter = isMatchPlayed;
-        } else if (currentMatchStatusFilter === 'unplayed') {
-          passesStatusFilter = !isMatchPlayed;
-        }
+        // Filtro per giocatori
+        const passesPlayerFilter = activePlayerFilters.size === 0 || [...activePlayerFilters].every(player => allPlayersInMatch.includes(player));
 
-        // Mostra o nascondi il match
-        if (passesPlayerFilter && passesStatusFilter) {
-          matchElement.classList.remove("hidden");
-        } else {
-          matchElement.classList.add("hidden");
-        }
-      });
-    }
+        // Filtro per stato partita
+        let passesStatusFilter = true;
+        if (currentMatchStatusFilter === 'played') {
+          passesStatusFilter = isMatchPlayed;
+        } else if (currentMatchStatusFilter === 'unplayed') {
+          passesStatusFilter = !isMatchPlayed;
+        }
 
-    function saveScoresToFile() {
-      const fileContent = `// Dati del torneo. Questo file viene sovrascritto dal programma.\nvar savedScores = ${JSON.stringify(savedScores, null, 2)};`;
-      const blob = new Blob([fileContent], { type: 'application/javascript' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'punteggi.js';
-      a.click();
-      URL.revokeObjectURL(a.href);
-      alert("File 'punteggi.js' generato!\n\nRicorda di sovrascrivere il file vecchio nella cartella condivisa con questo appena scaricato.");
-    }
+        // Mostra o nascondi il match
+        if (passesPlayerFilter && passesStatusFilter) {
+          matchElement.classList.remove("hidden");
+        } else {
+          matchElement.classList.add("hidden");
+        }
+      });
+    }
 
-    let animationInterval;
+    let animationInterval;
 
-    function startMatchDraw(matchIndex) {
-      // Clear any existing interval to prevent multiple animations
-      if (animationInterval) {
-          clearInterval(animationInterval);
-      }
+    function startMatchDraw(matchIndex) {
+      // Clear any existing interval to prevent multiple animations
+      if (animationInterval) {
+          clearInterval(animationInterval);
+      }
 
-      const matchElement = document.getElementById("matches").children[matchIndex];
-      const drawButton = matchElement.querySelector('.draw-button');
-      const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
-      const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
+      const matchElement = document.getElementById("matches").children[matchIndex];
+      const drawButton = matchElement.querySelector('.draw-button');
+      const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
+      const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
 
-      // Disabilita il pulsante per evitare click multipli
-      drawButton.disabled = true;
-      matchElement.classList.add("match-started"); // Nasconde il pulsante e allinea i nomi
+      // Disabilita il pulsante per evitare click multipli
+      drawButton.disabled = true;
+      matchElement.classList.add("match-started"); // Nasconde il pulsante e allinea i nomi
 
-      // Reset dei colori dei pallini e delle classi finali prima dell'animazione
-      team1Indicator.classList.remove('final-blue', 'final-red');
-      team2Indicator.classList.remove('final-blue', 'final-red');
-      team1Indicator.style.backgroundColor = 'black'; // Resetta a nero per l'animazione
-      team2Indicator.style.backgroundColor = 'black'; // Resetta a nero per l'animazione
+      // Reset dei colori dei pallini e delle classi finali prima dell'animazione
+      team1Indicator.classList.remove('final-blue', 'final-red');
+      team2Indicator.classList.remove('final-blue', 'final-red');
+      team1Indicator.style.backgroundColor = 'black'; // Resetta a nero per l'animazione
+      team2Indicator.style.backgroundColor = 'black'; // Resetta a nero per l'animazione
 
-      let isRedForTeam1 = true; // Inizia con Team1 rosso, Team2 blu per il primo flash
-      let animationCount = 0;
-      const totalFlashes = 10; // Numero totale di lampeggi (100ms per flash = 1 secondo)
+      let isRedForTeam1 = true; // Inizia con Team1 rosso, Team2 blu per il primo flash
+      let animationCount = 0;
+      const totalFlashes = 10; // Numero totale di lampeggi (100ms per flash = 1 secondo)
 
-      animationInterval = setInterval(() => {
-        if (animationCount < totalFlashes) {
-          if (isRedForTeam1) {
-            team1Indicator.style.backgroundColor = 'red';
-            team2Indicator.style.backgroundColor = 'blue';
-          } else {
-            team1Indicator.style.backgroundColor = 'blue';
-            team2Indicator.style.backgroundColor = 'red';
-          }
-          isRedForTeam1 = !isRedForTeam1; // Inverti il colore per il prossimo flash
-          animationCount++;
-        } else {
-          // Animazione terminata
-          clearInterval(animationInterval);
-          determineStartingTeam(matchIndex);
-          // Il pulsante rimane disabilitato e nascosto. Verrà riabilitato/mostrato solo se il punteggio
-          // viene resettato a 0-0 in modalità modifica.
-        }
-      }, 100); // Velocità di alternanza (100ms per flash)
-    }
+      animationInterval = setInterval(() => {
+        if (animationCount < totalFlashes) {
+          if (isRedForTeam1) {
+            team1Indicator.style.backgroundColor = 'red';
+            team2Indicator.style.backgroundColor = 'blue';
+          } else {
+            team1Indicator.style.backgroundColor = 'blue';
+            team2Indicator.style.backgroundColor = 'red';
+          }
+          isRedForTeam1 = !isRedForTeam1; // Inverti il colore per il prossimo flash
+          animationCount++;
+        } else {
+          // Animazione terminata
+          clearInterval(animationInterval);
+          determineStartingTeam(matchIndex);
+          // Il pulsante rimane disabilitato e nascosto. Verrà riabilitato/mostrato solo se il punteggio
+          // viene resettato a 0-0 in modalità modifica.
+        }
+      }, 100); // Velocità di alternanza (100ms per flash)
+    }
 
-    function determineStartingTeam(matchIndex) {
-      const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
-      const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
+    function determineStartingTeam(matchIndex) {
+      const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
+      const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
 
-      // Assicurati che non ci siano classi di flash residue (anche se non le usiamo più direttamente)
-      team1Indicator.classList.remove('red-flash', 'blue-flash');
-      team2Indicator.classList.remove('red-flash', 'blue-flash');
+      // Assicurati che non ci siano classi di flash residue (anche se non le usiamo più direttamente)
+      team1Indicator.classList.remove('red-flash', 'blue-flash');
+      team2Indicator.classList.remove('red-flash', 'blue-flash');
 
-      let team1AssignedColor, team2AssignedColor;
+      let team1AssignedColor, team2AssignedColor;
 
-      // CORREZIONE DEFINITIVA: 50% di probabilità che Team1 sia blu, 50% che sia rosso.
-      if (Math.random() < 0.5) {
-        // Team1 Blue, Team2 Red
-        team1AssignedColor = 'blue';
-        team2AssignedColor = 'red';
-        team1Indicator.classList.add('final-blue');
-        team2Indicator.classList.add('final-red');
-      } else {
-        // Team1 Red, Team2 Blue
-        team1AssignedColor = 'red';
-        team2AssignedColor = 'blue';
-        team1Indicator.classList.add('final-red');
-        team2Indicator.classList.add('final-blue');
-      }
+      // CORREZIONE DEFINITIVA: 50% di probabilità che Team1 sia blu, 50% che sia rosso.
+      if (Math.random() < 0.5) {
+        // Team1 Blue, Team2 Red
+        team1AssignedColor = 'blue';
+        team2AssignedColor = 'red';
+        team1Indicator.classList.add('final-blue');
+        team2Indicator.classList.add('final-red');
+      } else {
+        // Team1 Red, Team2 Blue
+        team1AssignedColor = 'red';
+        team2AssignedColor = 'blue';
+        team1Indicator.classList.add('final-red');
+        team2Indicator.classList.add('final-blue');
+      }
 
-      // Salva i colori assegnati nei savedScores
-      if (!savedScores[matchIndex]) {
-          savedScores[matchIndex] = {};
-      }
-      savedScores[matchIndex].team1Color = `final-${team1AssignedColor}`;
-      savedScores[matchIndex].team2Color = `final-${team2AssignedColor}`;
+      // Salva i colori assegnati nei savedScores
+      if (!savedScores[matchIndex]) {
+          savedScores[matchIndex] = {};
+      }
+      savedScores[matchIndex].team1Color = `final-${team1AssignedColor}`;
+      savedScores[matchIndex].team2Color = `final-${team2AssignedColor}`;
+      saveScores(); // Salva i punteggi dopo l'estrazione dei colori
 
-      // Forza l'aggiornamento dei colori usando style.backgroundColor per assicurarsi
-      // che il colore finale sia visibile subito, poi le classi con !important mantengono la persistenza.
-      team1Indicator.style.backgroundColor = team1AssignedColor;
-      team2Indicator.style.backgroundColor = team2AssignedColor;
-    }
-    // --- FINE NUOVE FUNZIONI ---
+      // Forza l'aggiornamento dei colori usando style.backgroundColor per assicurarsi
+      // che il colore finale sia visibile subito, poi le classi con !important mantengono la persistenza.
+      team1Indicator.style.backgroundColor = team1AssignedColor;
+      team2Indicator.style.backgroundColor = team2AssignedColor;
+    }
+    // --- FINE NUOVE FUNZIONI ---
 
-    renderFilters();
-    renderMatches();
-    calculateAllStats();
-    filterMatches();
-  </script>
+    renderFilters();
+    renderMatches();
+    calculateAllStats();
+    filterMatches();
+  </script>
 </body>
 </html>
