@@ -325,7 +325,6 @@
             drawButton.disabled = true; // Disabilita il pulsante Inizia Partita se il match è giocato
             matchElement.classList.add("match-started"); // Nasconde il pulsante "Inizia Partita"
         }
-        saveScores(); // Salva i punteggi dopo ogni modifica
 
         // Applica/rimuovi la classe 'played'
         if (savedScores[c] && (savedScores[c].s1 !== 0 || savedScores[c].s2 !== 0)) {
@@ -333,6 +332,7 @@
         } else {
             matchElement.classList.remove('played');
         }
+        saveScores(); // Salva i punteggi dopo ogni modifica
         e.disabled = true;
         t.disabled = true;
         document.getElementById(`submit-btn-${c}`).style.display = "none";
