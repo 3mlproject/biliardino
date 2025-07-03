@@ -39,9 +39,10 @@
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
     th { background-color: #e7f5e7; color: #0e7546; }
-    .submit-btn, .edit-btn, #save-button { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    .submit-btn, .edit-btn, #save-button, #reset-button { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
     .edit-btn { background-color: #66bb6a; } /* Changed to a less visible green */
-    #save-button { background: #0e7546; display: block; margin: 20px auto 30px; padding: 8px 15px; font-size: 0.8rem; } /* Changed color, font size and increased bottom margin */
+    #save-button, #reset-button { display: block; margin: 20px auto 10px; padding: 8px 15px; font-size: 0.8rem; } /* Changed color, font size and increased bottom margin */
+    #reset-button { background-color: #dc3545; } /* Red color for reset button */
     .gold { background-color: #fff8dc !important; }
     .silver { background-color: #f5f5f5 !important; }
     .bronze { background-color: #fcebd0 !important; }
@@ -135,11 +136,21 @@
     </div>
   </div>
   <button id="save-button" onclick="saveScoresToFile()">ESPORTA PUNTEGGIO</button>
-  <script src="punteggi.js"></script>
+  <button id="reset-button" onclick="resetScores()">AZZERA PUNTEGGI</button>
+
   <script>
-    if (typeof savedScores === 'undefined') {
-      var savedScores = {};
+    // Funzione per caricare i punteggi da localStorage
+    function loadScores() {
+      const storedScores = localStorage.getItem('foosballScores');
+      return storedScores ? JSON.parse(storedScores) : {};
     }
+
+    // Funzione per salvare i punteggi in localStorage
+    function saveScores() {
+      localStorage.setItem('foosballScores', JSON.stringify(savedScores));
+    }
+
+    let savedScores = loadScores(); // Carica i punteggi all'avvio
 
     const players = ["CHIARA", "FRENKIE", "IRE", "KLM", "LUCA", "TEO"];
     let stats = Object.fromEntries(players.map(p => [p, {      points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0    }]));
@@ -319,6 +330,7 @@
             drawButton.disabled = true; // Disabilita il pulsante Inizia Partita se il match è giocato
             matchElement.classList.add("match-started"); // Nasconde il pulsante "Inizia Partita"
         }
+        saveScores(); // Salva i punteggi dopo ogni modifica
 
         // Applica/rimuovi la classe 'played'
         if (savedScores[c] && (savedScores[c].s1 !== 0 || savedScores[c].s2 !== 0)) {
@@ -391,6 +403,17 @@
       a.click();
       URL.revokeObjectURL(a.href);
       alert("File 'punteggi.js' generato!\n\nRicorda di sovrascrivere il file vecchio nella cartella condivisa con questo appena scaricato.");
+    }
+
+    // NUOVA FUNZIONE: Azzera tutti i punteggi
+    function resetScores() {
+      if (confirm("Sei sicuro di voler azzerare tutti i punteggi? Questa azione è irreversibile.")) {
+        localStorage.removeItem('foosballScores'); // Rimuove i dati da localStorage
+        savedScores = {}; // Resetta la variabile savedScores in memoria
+        calculateAllStats(); // Ricalcola la classifica (che ora sarà vuota)
+        renderMatches(); // Re-renderizza le partite per mostrare che sono tutte "da giocare"
+        alert("Tutti i punteggi sono stati azzerati!");
+      }
     }
 
     let animationInterval;
@@ -472,6 +495,7 @@
       }
       savedScores[matchIndex].team1Color = `final-${team1AssignedColor}`;
       savedScores[matchIndex].team2Color = `final-${team2AssignedColor}`;
+      saveScores(); // Salva i punteggi dopo l'estrazione dei colori
 
       // Forza l'aggiornamento dei colori usando style.backgroundColor per assicurarsi
       // che il colore finale sia visibile subito, poi le classi con !important mantengono la persistenza.
