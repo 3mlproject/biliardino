@@ -112,14 +112,15 @@
         flex-grow: 1;
     }
 
-    /* --- Media Queries per la Responsività --- */
+    /* --- Media Queries per la Responsività e Testi più Grandi --- */
     @media (max-width: 600px) {
       header {
-        font-size: 2.5rem; /* Riduci la dimensione del font per il titolo su mobile */
+        font-size: 3.5rem; /* Aumenta la dimensione del font per il titolo su mobile */
+        padding: 1rem 0; /* Riduci il padding verticale per un header più compatto */
       }
 
       h2 {
-        font-size: 1.5rem; /* Riduci la dimensione del font per i titoli delle sezioni */
+        font-size: 1.8rem; /* Aumenta la dimensione del font per i titoli delle sezioni */
       }
 
       .container {
@@ -130,13 +131,14 @@
       .match {
         flex-direction: column; /* Impila gli elementi verticalmente */
         align-items: stretch; /* Allunga gli elementi per occupare la larghezza */
-        padding: 10px;
+        padding: 15px 10px; /* Aumenta il padding del match box */
       }
 
       .player-names-section {
         width: 100%;
         justify-content: center; /* Centra i nomi dei giocatori */
-        margin-bottom: 10px; /* Spazio sotto la sezione nomi */
+        margin-bottom: 15px; /* Aumenta lo spazio sotto la sezione nomi */
+        font-size: 1.1rem; /* Aumenta il font size dei nomi */
       }
 
       .player-names {
@@ -144,24 +146,50 @@
         flex-grow: 1;
       }
 
+      .team-color-indicator {
+        width: 20px; /* Rendi i pallini più grandi */
+        height: 20px; /* Rendi i pallini più grandi */
+      }
+
       .score-section {
         width: 100%;
         justify-content: center; /* Centra gli input e i pulsanti dei punteggi */
-        margin-top: 10px; /* Spazio sopra la sezione punteggi */
+        margin-top: 15px; /* Aumenta lo spazio sopra la sezione punteggi */
+      }
+
+      .score-input {
+        width: 3.5rem; /* Rendi gli input più larghi */
+        font-size: 1.3rem; /* Aumenta la dimensione del font negli input */
+      }
+
+      .submit-btn, .edit-btn {
+        padding: 8px 12px; /* Aumenta il padding dei pulsanti OK/Modifica */
+        font-size: 1rem; /* Aumenta la dimensione del font dei pulsanti */
       }
 
       .draw-button {
-        margin: 0 auto 10px auto; /* Centra il pulsante e aggiungi margine inferiore */
+        margin: 0 auto 15px auto; /* Centra il pulsante e aggiungi margine inferiore */
         width: fit-content; /* Adatta la larghezza al contenuto */
+        padding: 10px 15px; /* Aumenta il padding del pulsante Inizia Partita */
+        font-size: 1.1rem; /* Aumenta il font size del pulsante */
       }
 
       .filter-buttons {
         justify-content: center; /* Centra i pulsanti di filtro */
       }
 
+      .filter-btn {
+        padding: 8px 12px; /* Aumenta il padding dei pulsanti filtro */
+        font-size: 1rem; /* Aumenta il font size dei pulsanti filtro */
+      }
+
       table, th, td {
-        font-size: 0.8rem; /* Riduci la dimensione del font per la tabella */
-        padding: 8px 5px; /* Riduci il padding della tabella */
+        font-size: 0.95rem; /* Aumenta la dimensione del font per la tabella */
+        padding: 10px 8px; /* Aumenta il padding della tabella */
+      }
+      #save-button, #reset-button {
+        padding: 10px 20px; /* Rendi i pulsanti più grandi */
+        font-size: 1rem; /* Aumenta il font size dei pulsanti */
       }
     }
   </style>
