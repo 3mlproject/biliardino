@@ -112,6 +112,58 @@
         flex-grow: 1;
     }
 
+    /* --- Media Queries per la Responsività --- */
+    @media (max-width: 600px) {
+      header {
+        font-size: 2.5rem; /* Riduci la dimensione del font per il titolo su mobile */
+      }
+
+      h2 {
+        font-size: 1.5rem; /* Riduci la dimensione del font per i titoli delle sezioni */
+      }
+
+      .container {
+        flex-direction: column;
+        padding: 10px;
+      }
+
+      .match {
+        flex-direction: column; /* Impila gli elementi verticalmente */
+        align-items: stretch; /* Allunga gli elementi per occupare la larghezza */
+        padding: 10px;
+      }
+
+      .player-names-section {
+        width: 100%;
+        justify-content: center; /* Centra i nomi dei giocatori */
+        margin-bottom: 10px; /* Spazio sotto la sezione nomi */
+      }
+
+      .player-names {
+        justify-content: center; /* Centra il testo dei nomi dei giocatori */
+        flex-grow: 1;
+      }
+
+      .score-section {
+        width: 100%;
+        justify-content: center; /* Centra gli input e i pulsanti dei punteggi */
+        margin-top: 10px; /* Spazio sopra la sezione punteggi */
+      }
+
+      .draw-button {
+        margin: 0 auto 10px auto; /* Centra il pulsante e aggiungi margine inferiore */
+        width: fit-content; /* Adatta la larghezza al contenuto */
+      }
+
+      .filter-buttons {
+        justify-content: center; /* Centra i pulsanti di filtro */
+      }
+
+      table, th, td {
+        font-size: 0.8rem; /* Riduci la dimensione del font per la tabella */
+        padding: 8px 5px; /* Riduci il padding della tabella */
+      }
+    }
   </style>
 </head>
 <body>
