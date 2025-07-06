@@ -17,28 +17,28 @@
     .score-input { width: 3rem; text-align: center; font-size: 1rem; }
     .score-section { display: flex; align-items: center; gap: 5px; flex-grow: 1; justify-content: flex-end; }
 
-    /* Nuovi stili per i filtri */
+    /* Stili per la sezione filtri */
     .filter-section {
         display: flex;
         flex-wrap: wrap;
-        justify-content: space-between; /* Spazio tra player e status filters */
+        justify-content: space-between;
         align-items: center;
-        gap: 20px; /* Spazio tra i due gruppi di filtri */
+        gap: 20px;
         margin-bottom: 30px;
         padding: 10px 0;
-        border-bottom: 1px solid #eee; /* Linea leggera per separazione visiva */
+        border-bottom: 1px solid #eee;
     }
     .filter-group {
         display: flex;
         flex-wrap: wrap;
-        gap: 10px; /* Spazio tra i pulsanti all'interno di un gruppo */
+        gap: 10px;
     }
     .filter-group.player-group {
-        justify-content: flex-start; /* Nomi giocatori a sinistra */
-        flex-grow: 1; /* Permette al gruppo giocatori di occupare più spazio */
+        justify-content: flex-start;
+        flex-grow: 1;
     }
     .filter-group.status-group {
-        justify-content: flex-end; /* Filtri stato a destra */
+        justify-content: flex-end;
     }
 
     .filter-btn {
@@ -48,34 +48,79 @@
         cursor: pointer;
         font-size: 0.9em;
         transition: background-color 0.3s ease, color 0.3s ease;
-        white-space: nowrap; /* Evita che il testo vada a capo */
+        white-space: nowrap;
     }
-    /* Stile per i pulsanti dei nomi dei giocatori (di base) */
     .filter-btn.player-btn {
-        background-color: #e0e0e0; /* Grigio più leggero */
+        background-color: #e0e0e0;
         color: #333;
     }
     .filter-btn.player-btn.active {
-        background-color: #0e7546; /* Verde originale quando attivo */
+        background-color: #0e7546;
         color: white;
     }
     .filter-btn.player-btn:hover {
-        background-color: #c0c0c0; /* Hover più scuro del default */
+        background-color: #c0c0c0;
     }
 
-
-    /* Stile per i pulsanti di stato (DA GIOCARE, GIOCATE) */
-    .filter-btn.status-btn {
-        background-color: #f0f0f0; /* Grigio ancora più chiaro */
+    /* Nuovi stili per il toggle DA GIOCARE / GIOCATE */
+    .toggle-container {
+        display: flex;
+        align-items: center;
+        gap: 8px; /* Spazio tra etichetta e switch */
+        font-size: 0.8em; /* Testo leggermente più piccolo */
         color: #555;
-        border: 1px solid #ddd; /* Bordo leggero per separarli meglio */
     }
-    .filter-btn.status-btn.active {
-        background-color: #66bb6a; /* Verde diverso (più chiaro) */
-        color: white;
+
+    .toggle-switch {
+        position: relative;
+        display: inline-block;
+        width: 48px; /* Larghezza dello switch */
+        height: 28px; /* Altezza dello switch */
     }
-    .filter-btn.status-btn:hover {
-        background-color: #d0d0d0; /* Hover più scuro del default */
+
+    /* Nasconde la checkbox di default */
+    .toggle-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    /* Lo "slider" (la barra del toggle) */
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #ccc; /* Grigio per lo stato "DA GIOCARE" */
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 28px; /* Rendi arrotondato */
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 20px; /* Dimensione del cerchio/pollice */
+        width: 20px;
+        left: 4px; /* Posizione iniziale */
+        bottom: 4px;
+        background-color: white;
+        -webkit-transition: .4s;
+        transition: .4s;
+        border-radius: 50%; /* Rendi il pollice rotondo */
+    }
+
+    /* Stile quando il toggle è attivo (GIOCATE) */
+    input:checked + .slider {
+        background-color: #66bb6a; /* Verde per lo stato "GIOCATE" */
+    }
+
+    input:checked + .slider:before {
+        -webkit-transform: translateX(20px); /* Sposta il pollice a destra */
+        -ms-transform: translateX(20px);
+        transform: translateX(20px);
     }
 
 
@@ -184,14 +229,14 @@
       ["IRE", "KLM", "LUCA", "TEO"], ["IRE", "LUCA", "KLM", "TEO"], ["IRE", "TEO", "KLM", "LUCA"]
     ].map(([a1, a2, b1, b2]) => [[a1, a2], [b1, b2]]);
     const activePlayerFilters = new Set();
-    let currentMatchStatusFilter = 'unplayed'; // Impostato a 'unplayed' come default
+    let currentMatchStatusFilter = 'unplayed';
 
     // 3. Funzioni dell'applicazione
     function renderFilters() {
       const playerFilterContainer = document.getElementById("player-filters");
       const statusFilterContainer = document.getElementById("status-filters");
       playerFilterContainer.innerHTML = "";
-      statusFilterContainer.innerHTML = "";
+      statusFilterContainer.innerHTML = ""; // Pulisce il container dei filtri di stato
 
       players.forEach(p => {
         const btn = document.createElement("button");
@@ -202,20 +247,28 @@
         playerFilterContainer.appendChild(btn);
       });
 
-      // Modificato per includere solo DA GIOCARE e GIOCATE
-      const statusFilters = [
-          { text: "DA GIOCARE", value: "unplayed" },
-          { text: "GIOCATE", value: "played" }
-      ];
+      // Implementazione del toggle switch per i filtri di stato
+      const toggleContainer = document.createElement("div");
+      toggleContainer.className = "toggle-container";
+      toggleContainer.innerHTML = `
+        <span class="toggle-label">DA GIOCARE</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="match-status-toggle">
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">GIOCATE</span>
+      `;
+      statusFilterContainer.appendChild(toggleContainer);
 
-      statusFilters.forEach(filter => {
-        const btn = document.createElement("button");
-        btn.textContent = filter.text;
-        btn.className = "filter-btn status-btn";
-        if (currentMatchStatusFilter === filter.value) btn.classList.add('active');
-        btn.onclick = () => { currentMatchStatusFilter = filter.value; renderFilters(); filterMatches(); };
-        statusFilterContainer.appendChild(btn);
-      });
+      const toggleCheckbox = document.getElementById('match-status-toggle');
+      // Imposta lo stato iniziale del toggle
+      toggleCheckbox.checked = (currentMatchStatusFilter === 'played');
+
+      // Aggiunge l'event listener per il cambio di stato del toggle
+      toggleCheckbox.onchange = () => {
+        currentMatchStatusFilter = toggleCheckbox.checked ? 'played' : 'unplayed';
+        filterMatches();
+      };
     }
 
     function renderMatches() {
@@ -233,7 +286,7 @@
         const team1FinalColorClass = a?.team1Color || '';
         const team2FinalColorClass = a?.team2Color || '';
 
-        const indicatorDisplay = isPlayed ? 'none' : 'inline-block'; // Hide if match is played
+        const indicatorDisplay = isPlayed ? 'none' : 'inline-block';
 
         s.innerHTML = `
           <div class="player-names-section">
@@ -331,7 +384,8 @@
         const score = savedScores[index];
         const isPlayed = score && (score.s1 !== undefined && score.s2 !== undefined) && (score.s1 !== 0 || score.s2 !== 0);
         const playerFilterOk = activePlayerFilters.size === 0 || [...activePlayerFilters].every(p => allPlayers.includes(p));
-        const statusFilterOk = currentMatchStatusFilter === 'all' || (currentMatchStatusFilter === 'played' && isPlayed) || (currentMatchStatusFilter === 'unplayed' && !isPlayed);
+        // La logica del filtro di stato ora gestisce solo 'played' o 'unplayed'
+        const statusFilterOk = (currentMatchStatusFilter === 'played' && isPlayed) || (currentMatchStatusFilter === 'unplayed' && !isPlayed);
         matchElement.style.display = (playerFilterOk && statusFilterOk) ? "" : "none";
       });
     }
@@ -352,8 +406,8 @@
       if (animationInterval) clearInterval(animationInterval);
       const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
       const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
-      team1Indicator.style.display = 'inline-block'; // Ensure visible for animation
-      team2Indicator.style.display = 'inline-block'; // Ensure visible for animation
+      team1Indicator.style.display = 'inline-block';
+      team2Indicator.style.display = 'inline-block';
 
 
       let isRedForTeam1 = true; let animationCount = 0; const totalFlashes = 10;
