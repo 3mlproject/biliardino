@@ -1,255 +1,350 @@
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>TORNEO DI BILIARDINO</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: Arial, sans-serif; background-color: #f1f5e3; margin: 0; padding: 0; }
+    header { background-color: #0e7546; color: white; text-align: center; padding: 1.5rem 0; font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; letter-spacing: 2px; }
+    .container { display: flex; flex-direction: column; gap: 20px; padding: 20px; max-width: 1200px; margin: auto; }
+    #matches-container, .standings { flex: 1; background: #fff; border-radius: 8px; padding: 15px; overflow-y: auto; }
+    .standings h2, #matches-container h2 { text-align: center; text-transform: uppercase; }
+    .match { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 15px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; transition: background 0.3s; flex-wrap: wrap; }
+    .match.played { background-color: #e6ffe6; } /* Light green for played matches */
+    .player-names-section { display: flex; align-items: center; flex-grow: 1; min-width: 200px; position: relative; }
+    .player-names { display: flex; align-items: center; font-weight: bold; font-size: 1.1em; flex-grow: 1; }
+    .team-color-indicator { width: 15px; height: 15px; border-radius: 50%; display: inline-block; margin-right: 8px; border: 1px solid #333; }
+    .final-red { background-color: red; }
+    .final-blue { background-color: blue; }
+    .score-section { display: flex; align-items: center; gap: 5px; }
+    .score-input { width: 40px; text-align: center; font-size: 1em; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
+    .submit-btn, .edit-btn, .draw-button, .filter-btn, .reset-btn { background-color: #0e7546; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.9em; transition: background-color 0.3s; margin-left: 5px; }
+    .submit-btn:hover, .edit-btn:hover, .draw-button:hover, .filter-btn:hover, .reset-btn:hover { background-color: #0b5a34; }
+    .submit-btn:disabled { background-color: #cccccc; cursor: not-allowed; }
+    .edit-btn { background-color: #f0ad4e; }
+    .edit-btn:hover { background-color: #ec971f; }
+    .draw-button { background-color: #007bff; }
+    .draw-button:hover { background-color: #0056b3; }
+    .filter-btn { background-color: #6c757d; margin: 5px; }
+    .filter-btn.active { background-color: #0e7546; }
+    .filter-btn:hover { background-color: #5a6268; }
+    .reset-btn { background-color: #dc3545; margin-top: 20px; }
+    .reset-btn:hover { background-color: #c82333; }
+    #player-and-status-filters { display: flex; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+    th { background-color: #f2f2f2; }
+    tr.gold { background-color: #ffd700; }
+    tr.silver { background-color: #c0c0c0; }
+    tr.bronze { background-color: #cd7f32; }
 
-<script>
-  // 1. Inizializzazione di Firebase
-  const firebaseConfig = {
-      apiKey: "AIzaSyAYjQZxyYDYrxuzYdUtsQnSlKrNFuvwfyo",
-      authDomain: "torneo-biliardino.firebaseapp.com",
-      projectId: "torneo-biliardino",
-      storageBucket: "torneo-biliardino.firebasestorage.app",
-      messagingSenderId: "592520260738",
-      appId: "1:592520260738:web:8496f057e057cee84d589b",
-      measurementId: "G-B6CLT4K3GL"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
-  const scoresCollection = db.collection("scores");
-
-  // 2. Variabili e costanti globali dell'applicazione
-  let savedScores = {}; // Conterrà una copia locale dei dati da Firebase
-  const players = ["CHIARA", "FRENKIE", "IRE", "KLM", "LUCA", "TEO"];
-  let stats = Object.fromEntries(players.map(p => [p, { points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0 }]));
-  const matches = [
-    ["CHIARA", "FRENKIE", "IRE", "KLM"], ["CHIARA", "FRENKIE", "IRE", "LUCA"], ["CHIARA", "FRENKIE", "IRE", "TEO"],
-    ["CHIARA", "FRENKIE", "KLM", "LUCA"], ["CHIARA", "FRENKIE", "KLM", "TEO"], ["CHIARA", "FRENKIE", "LUCA", "TEO"],
-    ["CHIARA", "IRE", "FRENKIE", "KLM"], ["CHIARA", "IRE", "FRENKIE", "LUCA"], ["CHIARA", "IRE", "FRENKIE", "TEO"],
-    ["CHIARA", "IRE", "KLM", "LUCA"], ["CHIARA", "IRE", "KLM", "TEO"], ["CHIARA", "IRE", "LUCA", "TEO"],
-    ["CHIARA", "KLM", "FRENKIE", "IRE"], ["CHIARA", "KLM", "FRENKIE", "LUCA"], ["CHIARA", "KLM", "FRENKIE", "TEO"],
-    ["CHIARA", "KLM", "IRE", "LUCA"], ["CHIARA", "KLM", "IRE", "TEO"], ["CHIARA", "KLM", "LUCA", "TEO"],
-    ["CHIARA", "LUCA", "FRENKIE", "IRE"], ["CHIARA", "LUCA", "FRENKIE", "KLM"], ["CHIARA", "LUCA", "FRENKIE", "TEO"],
-    ["CHIARA", "LUCA", "IRE", "KLM"], ["CHIARA", "LUCA", "IRE", "TEO"], ["CHIARA", "LUCA", "KLM", "TEO"],
-    ["CHIARA", "TEO", "FRENKIE", "IRE"], ["CHIARA", "TEO", "FRENKIE", "KLM"], ["CHIARA", "TEO", "FRENKIE", "LUCA"],
-    ["CHIARA", "TEO", "IRE", "KLM"], ["CHIARA", "TEO", "IRE", "LUCA"], ["CHIARA", "TEO", "KLM", "LUCA"],
-    ["FRENKIE", "IRE", "KLM", "LUCA"], ["FRENKIE", "IRE", "KLM", "TEO"], ["FRENKIE", "IRE", "LUCA", "TEO"],
-    ["FRENKIE", "KLM", "IRE", "LUCA"], ["FRENKIE", "KLM", "IRE", "TEO"], ["FRENKIE", "KLM", "LUCA", "TEO"],
-    ["FRENKIE", "LUCA", "IRE", "KLM"], ["FRENKIE", "LUCA", "IRE", "TEO"], ["FRENKIE", "LUCA", "KLM", "TEO"],
-    ["FRENKIE", "TEO", "IRE", "KLM"], ["FRENKIE", "TEO", "IRE", "LUCA"], ["FRENKIE", "TEO", "KLM", "LUCA"],
-    ["IRE", "KLM", "LUCA", "TEO"], ["IRE", "LUCA", "KLM", "TEO"], ["IRE", "TEO", "KLM", "LUCA"]
-  ].map(([a1, a2, b1, b2]) => [[a1, a2], [b1, b2]]);
-  const activePlayerFilters = new Set();
-  let currentMatchStatusFilter = 'all';
-
-  // 3. Funzioni dell'applicazione
-  function renderFilters() {
-    const filterContainer = document.getElementById("player-and-status-filters");
-    filterContainer.innerHTML = "";
-    players.forEach(p => {
-      const btn = document.createElement("button");
-      btn.textContent = p; btn.className = "filter-btn";
-      if (activePlayerFilters.has(p)) btn.classList.add('active');
-      btn.onclick = () => { btn.classList.toggle("active"); activePlayerFilters.has(p) ? activePlayerFilters.delete(p) : activePlayerFilters.add(p); filterMatches(); };
-      filterContainer.appendChild(btn);
-    });
-    const statusFilters = [{ text: "TUTTE", value: "all" }, { text: "GIOCATE", value: "played" }, { text: "DA GIOCARE", value: "unplayed" }];
-    statusFilters.forEach(filter => {
-      const btn = document.createElement("button");
-      btn.textContent = filter.text; btn.className = "filter-btn";
-      if (currentMatchStatusFilter === filter.value) btn.classList.add('active');
-      btn.onclick = () => { currentMatchStatusFilter = filter.value; renderFilters(); filterMatches(); };
-      filterContainer.appendChild(btn);
-    });
-  }
-
-  function renderMatches() {
-    const c = document.getElementById("matches");
-    c.innerHTML = "";
-    matches.forEach(([e, t], l) => {
-      const s = document.createElement("div"); s.className = "match";
-      const a = savedScores[l];
-      const isPlayed = a && (a.s1 !== undefined && a.s2 !== undefined) && (a.s1 !== 0 || a.s2 !== 0);
-
-      // Aggiunge la classe 'match-started' se ci sono assegnazioni di colore (anche se i punteggi non sono ancora stati inseriti)
-      // Questo assicura che il pulsante "Inizia Partita" sia nascosto e la sezione giocatori sia giustificata a sinistra.
-      if (a && (a.team1Color || a.s1 !== undefined)) s.classList.add("match-started");
-
-      if (isPlayed) s.classList.add("played");
-
-      // Determina i colori finali o un colore di default vuoto se non impostato o la partita non è stata giocata
-      const team1FinalColorClass = a?.team1Color || '';
-      const team2FinalColorClass = a?.team2Color || '';
-
-      // Imposta lo stile di visualizzazione per gli indicatori in base al fatto che la partita sia stata giocata
-      const indicatorDisplay = isPlayed ? 'none' : 'inline-block'; // Nascondi se la partita è stata giocata
-
-      s.innerHTML = `
-        <div class="player-names-section">
-          <button class="draw-button" onclick="startMatchDraw(${l})">Inizia Partita</button>
-          <div class="player-names">
-            <span id="team1-indicator-${l}" class="team-color-indicator ${team1FinalColorClass}" style="display: ${indicatorDisplay};"></span> ${e.join(" & ")} vs
-            <span id="team2-indicator-${l}" class="team-color-indicator ${team2FinalColorClass}" style="display: ${indicatorDisplay};"></span> ${t.join(" & ")}
-          </div>
-        </div>
-        <div class="score-section">
-          <input type="number" id="s1-${l}" class="score-input" min="0" max="10" value="${a?.s1 !== undefined ? a.s1 : ""}" ${a && a.s1 !== undefined ? "disabled" : ""}>
-          -
-          <input type="number" id="s2-${l}" class="score-input" min="0" max="10" value="${a?.s2 !== undefined ? a.s2 : ""}" ${a && a.s2 !== undefined ? "disabled" : ""}>
-          <button id="submit-btn-${l}" class="submit-btn" onclick="submitScore(${l})" style="display: ${a && a.s1 !== undefined ? "none" : "inline-block"};">OK</button>
-          <button id="edit-btn-${l}" class="edit-btn" onclick="editScore(${l})" style="display: ${a && a.s1 !== undefined ? "inline-block" : "none"};">Modifica</button>
-        </div>
-      `;
-      c.appendChild(s);
-    });
-  }
-
-  function editScore(c) {
-    document.getElementById(`s1-${c}`).disabled = false;
-    document.getElementById(`s2-${c}`).disabled = false;
-    document.getElementById(`submit-btn-${c}`).style.display = "inline-block";
-    document.getElementById(`edit-btn-${c}`).style.display = "none";
-    // Mostra gli indicatori di colore durante la modifica
-    const team1Indicator = document.getElementById(`team1-indicator-${c}`);
-    const team2Indicator = document.getElementById(`team2-indicator-${c}`);
-    if (team1Indicator) team1Indicator.style.display = 'inline-block';
-    if (team2Indicator) team2Indicator.style.display = 'inline-block';
-  }
-
-  async function submitScore(c) {
-    const e = document.getElementById(`s1-${c}`);
-    const t = document.getElementById(`s2-${c}`);
-    const l = parseInt(e.value);
-    const s = parseInt(t.value);
-
-    // Nascondi gli indicatori di colore immediatamente al tentativo di invio
-    const team1Indicator = document.getElementById(`team1-indicator-${c}`);
-    const team2Indicator = document.getElementById(`team2-indicator-${c}`);
-    if (team1Indicator) team1Indicator.style.display = 'none';
-    if (team2Indicator) team2Indicator.style.display = 'none';
-
-    if (!isNaN(l) && !isNaN(s)) {
-      if (l === 0 && s === 0) {
-        if (confirm("Sei sicuro di voler resettare il punteggio a 0-0? Questo lo rimuoverà dalle partite giocate.")) {
-          // Rimuovi anche le assegnazioni di colore quando si resetta a 0-0
-          await scoresCollection.doc(String(c)).delete();
-        } else {
-          e.value = savedScores[c]?.s1 || "";
-          t.value = savedScores[c]?.s2 || "";
-          // Se l'annullamento è stato annullato, mostra nuovamente gli indicatori se erano presenti
-          if (savedScores[c]?.team1Color) team1Indicator.style.display = 'inline-block';
-          if (savedScores[c]?.team2Color) team2Indicator.style.display = 'inline-block';
-        }
-      } else {
-        const scoreData = { s1: l, s2: s };
-        // Quando un punteggio viene inviato (e non è 0-0), assicurati che i dati del colore vengano rimossi
-        // Questo fa sì che gli indicatori scompaiano.
-        scoreData.team1Color = firebase.firestore.FieldValue.delete();
-        scoreData.team2Color = firebase.firestore.FieldValue.delete();
-        await scoresCollection.doc(String(c)).set(scoreData, { merge: true });
-      }
+    /* Styles for hiding "Inizia Partita" button and justifying player names */
+    .match-started .draw-button {
+        display: none;
     }
-  }
 
-  function calculateAllStats() {
-    stats = Object.fromEntries(players.map(p => [p, { played: 0, won: 0, goalsFor: 0, goalsAgainst: 0 }]));
-    Object.entries(savedScores).forEach(([matchIndex, scoreData]) => {
-        const [team1, team2] = matches[parseInt(matchIndex, 10)];
-        const score1 = scoreData.s1;
-        const score2 = scoreData.s2;
-        if ((score1 !== undefined && score2 !== undefined) && (score1 !== 0 || score2 !== 0)) {
-            team1.forEach(p => { stats[p].played++; stats[p].goalsFor += score1; stats[p].goalsAgainst += score2; });
-            team2.forEach(p => { stats[p].played++; stats[p].goalsFor += score2; stats[p].goalsAgainst += score1; });
-            if (score1 > score2) team1.forEach(p => stats[p].won++);
-            else if (score2 > score1) team2.forEach(p => stats[p].won++);
-        }
-    });
-    updateLeaderboard();
-  }
-
-  function updateLeaderboard() {
-    const c = document.getElementById("leaderboard"); c.innerHTML = "";
-    const sortedPlayers = Object.entries(stats).sort(([, a], [, b]) => (b.won / b.played || 0) - (a.won / a.played || 0) || b.won - a.won || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst));
-    sortedPlayers.forEach(([e, t], l) => {
-      const s = t.played > 0 ? Math.round(t.won / t.played * 100) + "%" : "0%";
-      const a = document.createElement("tr");
-      if (l === 0) a.classList.add("gold"); else if (l === 1) a.classList.add("silver"); else if (l === 2) a.classList.add("bronze");
-      a.innerHTML = `<td>${l + 1}</td><td><strong>${e}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td><td><strong>${t.goalsFor}</strong></td><td>${t.goalsAgainst}</td>`;
-      c.appendChild(a);
-    });
-  }
-
-  function filterMatches() {
-    document.querySelectorAll("#matches .match").forEach((matchElement, index) => {
-      const [team1, team2] = matches[index];
-      const allPlayers = [...team1, ...team2];
-      const score = savedScores[index];
-      const isPlayed = score && (score.s1 !== undefined && score.s2 !== undefined) && (score.s1 !== 0 || score.s2 !== 0);
-      const playerFilterOk = activePlayerFilters.size === 0 || [...activePlayerFilters].every(p => allPlayers.includes(p));
-      const statusFilterOk = currentMatchStatusFilter === 'all' || (currentMatchStatusFilter === 'played' && isPlayed) || (currentMatchStatusFilter === 'unplayed' && !isPlayed);
-      matchElement.style.display = (playerFilterOk && statusFilterOk) ? "" : "none";
-    });
-  }
-
-  async function resetScores() {
-    if (confirm("Sei SICURO di voler azzerare TUTTI i punteggi dell'intero torneo? Questa azione è IRREVERSIBILE.")) {
-      alert("Cancellazione in corso... Potrebbe richiedere qualche secondo.");
-      const snapshot = await scoresCollection.get();
-      const batch = db.batch();
-      snapshot.forEach(doc => { batch.delete(doc.ref); });
-      await batch.commit();
-      alert("Torneo azzerato!");
+    .match-started .player-names {
+        justify-content: flex-start; /* Aligns content to the left */
+        margin-left: 0; /* Ensures no extra margin */
     }
-  }
 
-  let animationInterval;
-  function startMatchDraw(matchIndex) {
-    if (animationInterval) clearInterval(animationInterval);
-    const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
-    const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
-    // Assicurati che siano visibili quando inizia il sorteggio
-    team1Indicator.style.display = 'inline-block';
-    team2Indicator.style.display = 'inline-block';
+    /* Media Queries for Responsiveness */
+    @media (max-width: 768px) {
+      header { font-size: 3rem; padding: 1rem 0; }
+      .container { flex-direction: column; padding: 10px; }
+      .match { flex-direction: column; align-items: flex-start; }
+      .player-names-section { width: 100%; margin-bottom: 10px; }
+      .score-section { width: 100%; justify-content: flex-end; }
+      .score-input { width: 50px; }
+      .submit-btn, .edit-btn { margin-left: 0; margin-top: 5px; width: 100%; }
+      .filter-btn { width: auto; margin: 3px; font-size: 0.8em; padding: 6px 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header>TORNEO DI BILIARDINO</header>
+  <div class="container">
+    <div id="player-and-status-filters"></div>
+    <div id="matches-container">
+      <h2>Partite</h2>
+      <div id="matches"></div>
+    </div>
+    <div class="standings">
+      <h2>Classifica</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Pos.</th>
+            <th>Giocatore</th>
+            <th>Partite Giocate</th>
+            <th>Vinte</th>
+            <th>% Vittoria</th>
+            <th>Gol Fatti</th>
+            <th>Gol Subiti</th>
+          </tr>
+        </thead>
+        <tbody id="leaderboard">
+          </tbody>
+      </table>
+      <button class="reset-btn" onclick="resetScores()">Azzera Torneo</button>
+    </div>
+  </div>
 
-    let isRedForTeam1 = true; let animationCount = 0; const totalFlashes = 10;
-    animationInterval = setInterval(() => {
-      if (animationCount < totalFlashes) {
-        team1Indicator.style.backgroundColor = isRedForTeam1 ? 'red' : 'blue';
-        team2Indicator.style.backgroundColor = isRedForTeam1 ? 'blue' : 'red';
-        isRedForTeam1 = !isRedForTeam1; animationCount++;
-      } else {
-        clearInterval(animationInterval);
-        determineStartingTeam(matchIndex);
-      }
-    }, 100);
-  }
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  async function determineStartingTeam(matchIndex) {
-    const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
-    const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
-    let team1Color = (Math.random() < 0.5) ? 'blue' : 'red';
-    let team2Color = (team1Color === 'blue') ? 'red' : 'blue';
-    team1Indicator.className = `team-color-indicator final-${team1Color}`;
-    team2Indicator.className = `team-color-indicator final-${team2Color}`;
-    await scoresCollection.doc(String(matchIndex)).set({
-      team1Color: `final-${team1Color}`,
-      team2Color: `final-${team2Color}`
-    }, { merge: true });
-    // Questo `set` attiverà il listener onSnapshot, che a sua volta chiamerà renderMatches
-    // e la classe `match-started` verrà aggiunta, nascondendo il pulsante di sorteggio.
-  }
+  <script>
+    // 1. Inizializzazione di Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyAYjQZxyYDYrxuzYdUtsQnSlKrNFuvwfyo",
+        authDomain: "torneo-biliardino.firebaseapp.com",
+        projectId: "torneo-biliardino",
+        storageBucket: "torneo-biliardino.firebasestorage.app",
+        messagingSenderId: "592520260738",
+        appId: "1:592520260738:web:8496f057e057cee84d589b",
+        measurementId: "G-B6CLT4K3GL"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const scoresCollection = db.collection("scores");
 
-  // 4. Listener di Firebase (si attiva al caricamento e a ogni modifica)
-  scoresCollection.onSnapshot(snapshot => {
-      console.log("Dati aggiornati ricevuti da Firebase!");
-      const newScores = {};
-      snapshot.forEach(doc => {
-          newScores[doc.id] = doc.data();
+    // 2. Variabili e costanti globali dell'applicazione
+    let savedScores = {}; // Conterrà una copia locale dei dati da Firebase
+    const players = ["CHIARA", "FRENKIE", "IRE", "KLM", "LUCA", "TEO"];
+    let stats = Object.fromEntries(players.map(p => [p, { points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0 }]));
+    const matches = [
+      ["CHIARA", "FRENKIE", "IRE", "KLM"], ["CHIARA", "FRENKIE", "IRE", "LUCA"], ["CHIARA", "FRENKIE", "IRE", "TEO"],
+      ["CHIARA", "FRENKIE", "KLM", "LUCA"], ["CHIARA", "FRENKIE", "KLM", "TEO"], ["CHIARA", "FRENKIE", "LUCA", "TEO"],
+      ["CHIARA", "IRE", "FRENKIE", "KLM"], ["CHIARA", "IRE", "FRENKIE", "LUCA"], ["CHIARA", "IRE", "FRENKIE", "TEO"],
+      ["CHIARA", "IRE", "KLM", "LUCA"], ["CHIARA", "IRE", "KLM", "TEO"], ["CHIARA", "IRE", "LUCA", "TEO"],
+      ["CHIARA", "KLM", "FRENKIE", "IRE"], ["CHIARA", "KLM", "FRENKIE", "LUCA"], ["CHIARA", "KLM", "FRENKIE", "TEO"],
+      ["CHIARA", "KLM", "IRE", "LUCA"], ["CHIARA", "KLM", "IRE", "TEO"], ["CHIARA", "KLM", "LUCA", "TEO"],
+      ["CHIARA", "LUCA", "FRENKIE", "IRE"], ["CHIARA", "LUCA", "FRENKIE", "KLM"], ["CHIARA", "LUCA", "FRENKIE", "TEO"],
+      ["CHIARA", "LUCA", "IRE", "KLM"], ["CHIARA", "LUCA", "IRE", "TEO"], ["CHIARA", "LUCA", "KLM", "TEO"],
+      ["CHIARA", "TEO", "FRENKIE", "IRE"], ["CHIARA", "TEO", "FRENKIE", "KLM"], ["CHIARA", "TEO", "FRENKIE", "LUCA"],
+      ["CHIARA", "TEO", "IRE", "KLM"], ["CHIARA", "TEO", "IRE", "LUCA"], ["CHIARA", "TEO", "KLM", "LUCA"],
+      ["FRENKIE", "IRE", "KLM", "LUCA"], ["FRENKIE", "IRE", "KLM", "TEO"], ["FRENKIE", "IRE", "LUCA", "TEO"],
+      ["FRENKIE", "KLM", "IRE", "LUCA"], ["FRENKIE", "KLM", "IRE", "TEO"], ["FRENKIE", "KLM", "LUCA", "TEO"],
+      ["FRENKIE", "LUCA", "IRE", "KLM"], ["FRENKIE", "LUCA", "IRE", "TEO"], ["FRENKIE", "LUCA", "KLM", "TEO"],
+      ["FRENKIE", "TEO", "IRE", "KLM"], ["FRENKIE", "TEO", "IRE", "LUCA"], ["FRENKIE", "TEO", "KLM", "LUCA"],
+      ["IRE", "KLM", "LUCA", "TEO"], ["IRE", "LUCA", "KLM", "TEO"], ["IRE", "TEO", "KLM", "LUCA"]
+    ].map(([a1, a2, b1, b2]) => [[a1, a2], [b1, b2]]);
+    const activePlayerFilters = new Set();
+    let currentMatchStatusFilter = 'all';
+
+    // 3. Funzioni dell'applicazione
+    function renderFilters() {
+      const filterContainer = document.getElementById("player-and-status-filters");
+      filterContainer.innerHTML = "";
+      players.forEach(p => {
+        const btn = document.createElement("button");
+        btn.textContent = p; btn.className = "filter-btn";
+        if (activePlayerFilters.has(p)) btn.classList.add('active');
+        btn.onclick = () => { btn.classList.toggle("active"); activePlayerFilters.has(p) ? activePlayerFilters.delete(p) : activePlayerFilters.add(p); filterMatches(); };
+        filterContainer.appendChild(btn);
       });
-      savedScores = newScores;
-      // Ad ogni aggiornamento, ridisegna tutta la UI con i dati freschi
-      renderFilters();
-      renderMatches();
-      calculateAllStats();
-      filterMatches();
-  });
+      const statusFilters = [{ text: "TUTTE", value: "all" }, { text: "GIOCATE", value: "played" }, { text: "DA GIOCARE", value: "unplayed" }];
+      statusFilters.forEach(filter => {
+        const btn = document.createElement("button");
+        btn.textContent = filter.text; btn.className = "filter-btn";
+        if (currentMatchStatusFilter === filter.value) btn.classList.add('active');
+        btn.onclick = () => { currentMatchStatusFilter = filter.value; renderFilters(); filterMatches(); };
+        filterContainer.appendChild(btn);
+      });
+    }
 
-</script>
+    function renderMatches() {
+      const c = document.getElementById("matches");
+      c.innerHTML = "";
+      matches.forEach(([e, t], l) => {
+        const s = document.createElement("div"); s.className = "match";
+        const a = savedScores[l];
+        const isPlayed = a && (a.s1 !== undefined && a.s2 !== undefined) && (a.s1 !== 0 || a.s2 !== 0);
+
+        // Aggiunge la classe 'match-started' se ci sono assegnazioni di colore (anche se i punteggi non sono ancora stati inseriti)
+        // Questo assicura che il pulsante "Inizia Partita" sia nascosto e la sezione giocatori sia giustificata a sinistra.
+        if (a && (a.team1Color || a.s1 !== undefined)) s.classList.add("match-started");
+
+        if (isPlayed) s.classList.add("played");
+
+        // Determina i colori finali o un colore di default vuoto se non impostato o la partita non è stata giocata
+        const team1FinalColorClass = a?.team1Color || '';
+        const team2FinalColorClass = a?.team2Color || '';
+
+        // Imposta lo stile di visualizzazione per gli indicatori in base al fatto che la partita sia stata giocata
+        const indicatorDisplay = isPlayed ? 'none' : 'inline-block'; // Nascondi se la partita è stata giocata
+
+        s.innerHTML = `
+          <div class="player-names-section">
+            <button class="draw-button" onclick="startMatchDraw(${l})">Inizia Partita</button>
+            <div class="player-names">
+              <span id="team1-indicator-${l}" class="team-color-indicator ${team1FinalColorClass}" style="display: ${indicatorDisplay};"></span> ${e.join(" & ")} vs
+              <span id="team2-indicator-${l}" class="team-color-indicator ${team2FinalColorClass}" style="display: ${indicatorDisplay};"></span> ${t.join(" & ")}
+            </div>
+          </div>
+          <div class="score-section">
+            <input type="number" id="s1-${l}" class="score-input" min="0" max="10" value="${a?.s1 !== undefined ? a.s1 : ""}" ${a && a.s1 !== undefined ? "disabled" : ""}>
+            -
+            <input type="number" id="s2-${l}" class="score-input" min="0" max="10" value="${a?.s2 !== undefined ? a.s2 : ""}" ${a && a.s2 !== undefined ? "disabled" : ""}>
+            <button id="submit-btn-${l}" class="submit-btn" onclick="submitScore(${l})" style="display: ${a && a.s1 !== undefined ? "none" : "inline-block"};">OK</button>
+            <button id="edit-btn-${l}" class="edit-btn" onclick="editScore(${l})" style="display: ${a && a.s1 !== undefined ? "inline-block" : "none"};">Modifica</button>
+          </div>
+        `;
+        c.appendChild(s);
+      });
+    }
+
+    function editScore(c) {
+      document.getElementById(`s1-${c}`).disabled = false;
+      document.getElementById(`s2-${c}`).disabled = false;
+      document.getElementById(`submit-btn-${c}`).style.display = "inline-block";
+      document.getElementById(`edit-btn-${c}`).style.display = "none";
+      // Mostra gli indicatori di colore durante la modifica
+      const team1Indicator = document.getElementById(`team1-indicator-${c}`);
+      const team2Indicator = document.getElementById(`team2-indicator-${c}`);
+      if (team1Indicator) team1Indicator.style.display = 'inline-block';
+      if (team2Indicator) team2Indicator.style.display = 'inline-block';
+    }
+
+    async function submitScore(c) {
+      const e = document.getElementById(`s1-${c}`);
+      const t = document.getElementById(`s2-${c}`);
+      const l = parseInt(e.value);
+      const s = parseInt(t.value);
+
+      // Nascondi gli indicatori di colore immediatamente al tentativo di invio
+      const team1Indicator = document.getElementById(`team1-indicator-${c}`);
+      const team2Indicator = document.getElementById(`team2-indicator-${c}`);
+      if (team1Indicator) team1Indicator.style.display = 'none';
+      if (team2Indicator) team2Indicator.style.display = 'none';
+
+      if (!isNaN(l) && !isNaN(s)) {
+        if (l === 0 && s === 0) {
+          if (confirm("Sei sicuro di voler resettare il punteggio a 0-0? Questo lo rimuoverà dalle partite giocate.")) {
+            // Rimuovi anche le assegnazioni di colore quando si resetta a 0-0
+            await scoresCollection.doc(String(c)).delete();
+          } else {
+            e.value = savedScores[c]?.s1 || "";
+            t.value = savedScores[c]?.s2 || "";
+            // Se l'annullamento è stato annullato, mostra nuovamente gli indicatori se erano presenti
+            if (savedScores[c]?.team1Color) team1Indicator.style.display = 'inline-block';
+            if (savedScores[c]?.team2Color) team2Indicator.style.display = 'inline-block';
+          }
+        } else {
+          const scoreData = { s1: l, s2: s };
+          // Quando un punteggio viene inviato (e non è 0-0), assicurati che i dati del colore vengano rimossi
+          // Questo fa sì che gli indicatori scompaiano.
+          scoreData.team1Color = firebase.firestore.FieldValue.delete();
+          scoreData.team2Color = firebase.firestore.FieldValue.delete();
+          await scoresCollection.doc(String(c)).set(scoreData, { merge: true });
+        }
+      }
+    }
+
+    function calculateAllStats() {
+      stats = Object.fromEntries(players.map(p => [p, { played: 0, won: 0, goalsFor: 0, goalsAgainst: 0 }]));
+      Object.entries(savedScores).forEach(([matchIndex, scoreData]) => {
+          const [team1, team2] = matches[parseInt(matchIndex, 10)];
+          const score1 = scoreData.s1;
+          const score2 = scoreData.s2;
+          if ((score1 !== undefined && score2 !== undefined) && (score1 !== 0 || score2 !== 0)) {
+              team1.forEach(p => { stats[p].played++; stats[p].goalsFor += score1; stats[p].goalsAgainst += score2; });
+              team2.forEach(p => { stats[p].played++; stats[p].goalsFor += score2; stats[p].goalsAgainst += score1; });
+              if (score1 > score2) team1.forEach(p => stats[p].won++);
+              else if (score2 > score1) team2.forEach(p => stats[p].won++);
+          }
+      });
+      updateLeaderboard();
+    }
+
+    function updateLeaderboard() {
+      const c = document.getElementById("leaderboard"); c.innerHTML = "";
+      const sortedPlayers = Object.entries(stats).sort(([, a], [, b]) => (b.won / b.played || 0) - (a.won / a.played || 0) || b.won - a.won || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst));
+      sortedPlayers.forEach(([e, t], l) => {
+        const s = t.played > 0 ? Math.round(t.won / t.played * 100) + "%" : "0%";
+        const a = document.createElement("tr");
+        if (l === 0) a.classList.add("gold"); else if (l === 1) a.classList.add("silver"); else if (l === 2) a.classList.add("bronze");
+        a.innerHTML = `<td>${l + 1}</td><td><strong>${e}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td><td><strong>${t.goalsFor}</strong></td><td>${t.goalsAgainst}</td>`;
+        c.appendChild(a);
+      });
+    }
+
+    function filterMatches() {
+      document.querySelectorAll("#matches .match").forEach((matchElement, index) => {
+        const [team1, team2] = matches[index];
+        const allPlayers = [...team1, ...team2];
+        const score = savedScores[index];
+        const isPlayed = score && (score.s1 !== undefined && score.s2 !== undefined) && (score.s1 !== 0 || score.s2 !== 0);
+        const playerFilterOk = activePlayerFilters.size === 0 || [...activePlayerFilters].every(p => allPlayers.includes(p));
+        const statusFilterOk = currentMatchStatusFilter === 'all' || (currentMatchStatusFilter === 'played' && isPlayed) || (currentMatchStatusFilter === 'unplayed' && !isPlayed);
+        matchElement.style.display = (playerFilterOk && statusFilterOk) ? "" : "none";
+      });
+    }
+
+    async function resetScores() {
+      if (confirm("Sei SICURO di voler azzerare TUTTI i punteggi dell'intero torneo? Questa azione è IRREVERSIBILE.")) {
+        alert("Cancellazione in corso... Potrebbe richiedere qualche secondo.");
+        const snapshot = await scoresCollection.get();
+        const batch = db.batch();
+        snapshot.forEach(doc => { batch.delete(doc.ref); });
+        await batch.commit();
+        alert("Torneo azzerato!");
+      }
+    }
+
+    let animationInterval;
+    function startMatchDraw(matchIndex) {
+      if (animationInterval) clearInterval(animationInterval);
+      const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
+      const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
+      // Assicurati che siano visibili quando inizia il sorteggio
+      team1Indicator.style.display = 'inline-block';
+      team2Indicator.style.display = 'inline-block';
+
+      let isRedForTeam1 = true; let animationCount = 0; const totalFlashes = 10;
+      animationInterval = setInterval(() => {
+        if (animationCount < totalFlashes) {
+          team1Indicator.style.backgroundColor = isRedForTeam1 ? 'red' : 'blue';
+          team2Indicator.style.backgroundColor = isRedForTeam1 ? 'blue' : 'red';
+          isRedForTeam1 = !isRedForTeam1; animationCount++;
+        } else {
+          clearInterval(animationInterval);
+          determineStartingTeam(matchIndex);
+        }
+      }, 100);
+    }
+
+    async function determineStartingTeam(matchIndex) {
+      const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
+      const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
+      let team1Color = (Math.random() < 0.5) ? 'blue' : 'red';
+      let team2Color = (team1Color === 'blue') ? 'red' : 'blue';
+      team1Indicator.className = `team-color-indicator final-${team1Color}`;
+      team2Indicator.className = `team-color-indicator final-${team2Color}`;
+      await scoresCollection.doc(String(matchIndex)).set({
+        team1Color: `final-${team1Color}`,
+        team2Color: `final-${team2Color}`
+      }, { merge: true });
+      // Questo `set` attiverà il listener onSnapshot, che a sua volta chiamerà renderMatches
+      // e la classe `match-started` verrà aggiunta, nascondendo il pulsante di sorteggio.
+    }
+
+    // 4. Listener di Firebase (si attiva al caricamento e a ogni modifica)
+    scoresCollection.onSnapshot(snapshot => {
+        console.log("Dati aggiornati ricevuti da Firebase!");
+        const newScores = {};
+        snapshot.forEach(doc => {
+            newScores[doc.id] = doc.data();
+        });
+        savedScores = newScores;
+        // Ad ogni aggiornamento, ridisegna tutta la UI con i dati freschi
+        renderFilters();
+        renderMatches();
+        calculateAllStats();
+        filterMatches();
+    });
+
+  </script>
+</body>
+</html>
