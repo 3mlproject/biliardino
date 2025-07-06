@@ -64,7 +64,7 @@
     }
 
 
-    /* Stile per i pulsanti di stato (TUTTE, GIOCATE, DA GIOCARE) */
+    /* Stile per i pulsanti di stato (DA GIOCARE, GIOCATE) */
     .filter-btn.status-btn {
         background-color: #f0f0f0; /* Grigio ancora più chiaro */
         color: #555;
@@ -184,7 +184,7 @@
       ["IRE", "KLM", "LUCA", "TEO"], ["IRE", "LUCA", "KLM", "TEO"], ["IRE", "TEO", "KLM", "LUCA"]
     ].map(([a1, a2, b1, b2]) => [[a1, a2], [b1, b2]]);
     const activePlayerFilters = new Set();
-    let currentMatchStatusFilter = 'all';
+    let currentMatchStatusFilter = 'unplayed'; // Impostato a 'unplayed' come default
 
     // 3. Funzioni dell'applicazione
     function renderFilters() {
@@ -196,17 +196,22 @@
       players.forEach(p => {
         const btn = document.createElement("button");
         btn.textContent = p;
-        btn.className = "filter-btn player-btn"; // Aggiunta classe specifica
+        btn.className = "filter-btn player-btn";
         if (activePlayerFilters.has(p)) btn.classList.add('active');
         btn.onclick = () => { btn.classList.toggle("active"); activePlayerFilters.has(p) ? activePlayerFilters.delete(p) : activePlayerFilters.add(p); filterMatches(); };
         playerFilterContainer.appendChild(btn);
       });
 
-      const statusFilters = [{ text: "TUTTE", value: "all" }, { text: "GIOCATE", value: "played" }, { text: "DA GIOCARE", value: "unplayed" }];
+      // Modificato per includere solo DA GIOCARE e GIOCATE
+      const statusFilters = [
+          { text: "DA GIOCARE", value: "unplayed" },
+          { text: "GIOCATE", value: "played" }
+      ];
+
       statusFilters.forEach(filter => {
         const btn = document.createElement("button");
         btn.textContent = filter.text;
-        btn.className = "filter-btn status-btn"; // Aggiunta classe specifica
+        btn.className = "filter-btn status-btn";
         if (currentMatchStatusFilter === filter.value) btn.classList.add('active');
         btn.onclick = () => { currentMatchStatusFilter = filter.value; renderFilters(); filterMatches(); };
         statusFilterContainer.appendChild(btn);
