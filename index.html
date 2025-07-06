@@ -406,7 +406,8 @@
 
     function updateLeaderboard() {
       const c = document.getElementById("leaderboard"); c.innerHTML = "";
-      const sortedPlayers = Object.entries(stats).sort(([, a], [, b]) => (b.won / b.played || 0) - (a.won / a.played || 0) || b.won - a.won || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst));
+      // Ordinamento primario in base ai "goalsFor" (Segnati) in ordine decrescente
+      const sortedPlayers = Object.entries(stats).sort(([, a], [, b]) => b.goalsFor - a.goalsFor || (b.won / b.played || 0) - (a.won / a.played || 0) || b.won - a.won || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst));
       sortedPlayers.forEach(([e, t], l) => {
         const s = t.played > 0 ? Math.round(t.won / t.played * 100) + "%" : "0%";
         const a = document.createElement("tr");
