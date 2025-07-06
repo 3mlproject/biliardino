@@ -42,24 +42,31 @@
     }
 
     .filter-btn {
-        padding: 8px 12px;
         border: none;
-        border-radius: 5px;
         cursor: pointer;
-        font-size: 0.9em;
-        transition: background-color 0.3s ease, color 0.3s ease;
+        transition: background-color 0.3s ease, color 0.3s ease, padding 0.3s ease, border-radius 0.3s ease; /* Aggiunto transizione per padding e border-radius */
         white-space: nowrap;
     }
+
+    /* Stile per i pulsanti dei nomi dei giocatori */
     .filter-btn.player-btn {
-        background-color: #e0e0e0;
-        color: #333;
+        background-color: transparent;
+        color: #555;
+        font-size: 0.8em;
+        padding: 0; /* Nessun padding di default */
+        border-radius: 0; /* Nessun bordo arrotondato di default */
     }
     .filter-btn.player-btn.active {
-        background-color: #0e7546;
+        background-color: #c0c0c0; /* Grigio quando attivo */
         color: white;
+        padding: 8px 12px; /* Padding quando attivo */
+        border-radius: 5px; /* Bordi arrotondati quando attivo */
     }
     .filter-btn.player-btn:hover {
-        background-color: #c0c0c0;
+        background-color: #a0a0a0; /* Grigio più scuro per hover */
+        color: white;
+        padding: 8px 12px; /* Padding su hover */
+        border-radius: 5px; /* Bordi arrotondati su hover */
     }
 
     /* Nuovi stili per il toggle DA GIOCARE / GIOCATE */
@@ -236,7 +243,7 @@
       const playerFilterContainer = document.getElementById("player-filters");
       const statusFilterContainer = document.getElementById("status-filters");
       playerFilterContainer.innerHTML = "";
-      statusFilterContainer.innerHTML = ""; // Pulisce il container dei filtri di stato
+      statusFilterContainer.innerHTML = "";
 
       players.forEach(p => {
         const btn = document.createElement("button");
@@ -261,10 +268,8 @@
       statusFilterContainer.appendChild(toggleContainer);
 
       const toggleCheckbox = document.getElementById('match-status-toggle');
-      // Imposta lo stato iniziale del toggle
       toggleCheckbox.checked = (currentMatchStatusFilter === 'played');
 
-      // Aggiunge l'event listener per il cambio di stato del toggle
       toggleCheckbox.onchange = () => {
         currentMatchStatusFilter = toggleCheckbox.checked ? 'played' : 'unplayed';
         filterMatches();
@@ -384,7 +389,6 @@
         const score = savedScores[index];
         const isPlayed = score && (score.s1 !== undefined && score.s2 !== undefined) && (score.s1 !== 0 || score.s2 !== 0);
         const playerFilterOk = activePlayerFilters.size === 0 || [...activePlayerFilters].every(p => allPlayers.includes(p));
-        // La logica del filtro di stato ora gestisce solo 'played' o 'unplayed'
         const statusFilterOk = (currentMatchStatusFilter === 'played' && isPlayed) || (currentMatchStatusFilter === 'unplayed' && !isPlayed);
         matchElement.style.display = (playerFilterOk && statusFilterOk) ? "" : "none";
       });
