@@ -11,85 +11,74 @@
     #matches-container, .standings { flex: 1; background: #fff; border-radius: 8px; padding: 15px; overflow-y: auto; }
     .standings h2, #matches-container h2 { text-align: center; text-transform: uppercase; }
     .match { display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 15px; border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; transition: background 0.3s; flex-wrap: wrap; }
-    .match.played { background-color: #e6ffe6; } /* Light green for played matches */
-    .player-names-section { display: flex; align-items: center; flex-grow: 1; min-width: 200px; position: relative; }
-    .player-names { display: flex; align-items: center; font-weight: bold; font-size: 1.1em; flex-grow: 1; }
-    .team-color-indicator { width: 15px; height: 15px; border-radius: 50%; display: inline-block; margin-right: 8px; border: 1px solid #333; }
-    .final-red { background-color: red; }
-    .final-blue { background-color: blue; }
-    .score-section { display: flex; align-items: center; gap: 5px; }
-    .score-input { width: 40px; text-align: center; font-size: 1em; padding: 5px; border: 1px solid #ccc; border-radius: 4px; }
-    .submit-btn, .edit-btn, .draw-button, .filter-btn, .reset-btn { background-color: #0e7546; color: white; border: none; padding: 8px 12px; border-radius: 5px; cursor: pointer; font-size: 0.9em; transition: background-color 0.3s; margin-left: 5px; }
-    .submit-btn:hover, .edit-btn:hover, .draw-button:hover, .filter-btn:hover, .reset-btn:hover { background-color: #0b5a34; }
-    .submit-btn:disabled { background-color: #cccccc; cursor: not-allowed; }
-    .edit-btn { background-color: #f0ad4e; }
-    .edit-btn:hover { background-color: #ec971f; }
-    .draw-button { background-color: #007bff; }
-    .draw-button:hover { background-color: #0056b3; }
-    .filter-btn { background-color: #6c757d; margin: 5px; }
-    .filter-btn.active { background-color: #0e7546; }
-    .filter-btn:hover { background-color: #5a6268; }
-    .reset-btn { background-color: #dc3545; margin-top: 20px; }
-    .reset-btn:hover { background-color: #c82333; }
-    #player-and-status-filters { display: flex; flex-wrap: wrap; justify-content: center; margin-bottom: 20px; }
-    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-    th { background-color: #f2f2f2; }
-    tr.gold { background-color: #ffd700; }
-    tr.silver { background-color: #c0c0c0; }
-    tr.bronze { background-color: #cd7f32; }
-
-    /* Styles for hiding "Inizia Partita" button and justifying player names */
-    .match-started .draw-button {
-        display: none;
-    }
-
-    .match-started .player-names {
-        justify-content: flex-start; /* Aligns content to the left */
-        margin-left: 0; /* Ensures no extra margin */
-    }
-
-    /* Media Queries for Responsiveness */
-    @media (max-width: 768px) {
-      header { font-size: 3rem; padding: 1rem 0; }
+    .match.played { background: #d2f8d2; }
+    .match.played .player-names { color: #555; }
+    .hidden { display: none !important; }
+    .score-input { width: 3rem; text-align: center; font-size: 1rem; }
+    .score-section { display: flex; align-items: center; gap: 5px; flex-grow: 1; justify-content: flex-end; }
+    .filter-buttons { display: flex; flex-wrap: wrap; gap: 10px; margin: 10px 0; justify-content: center; margin-bottom: 30px; }
+    .filter-btn { padding: 5px 10px; background: #ccc; border: none; border-radius: 5px; cursor: pointer; }
+    .filter-btn.active { background: #a3d9a5; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #e7f5e7; color: #0e7546; }
+    .submit-btn, .edit-btn, #reset-button { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    .edit-btn { background-color: #66bb6a; }
+    #reset-button { display: block; margin: 20px auto 10px; padding: 8px 15px; font-size: 0.8rem; background-color: #dc3545;}
+    .gold { background-color: #fff8dc !important; }
+    .silver { background-color: #f5f5f5 !important; }
+    .bronze { background-color: #fcebd0 !important; }
+    .draw-button { background-color: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; margin-right: 10px; }
+    .draw-button:hover { background-color: #0c633a; }
+    .team-color-indicator { display: inline-block; width: 15px; height: 15px; border-radius: 50%; background-color: black; margin-right: 5px; vertical-align: middle; transition: background-color 0.1s ease-in-out; }
+    .team-color-indicator.final-blue { background-color: blue !important; }
+    .team-color-indicator.final-red { background-color: red !important; }
+    .player-names-section { display: flex; align-items: center; gap: 5px; flex-grow: 1; min-width: 200px; }
+    .player-names { display: flex; align-items: center; gap: 5px; }
+    .match.match-started .draw-button { display: none; }
+    .match.match-started .player-names-section { justify-content: flex-start; }
+    .match.match-started .player-names { flex-grow: 1; }
+    @media (max-width: 600px) {
+      header { font-size: 4rem; padding: 1.5rem 0; }
+      h2 { font-size: 2rem; }
       .container { flex-direction: column; padding: 10px; }
-      .match { flex-direction: column; align-items: flex-start; }
-      .player-names-section { width: 100%; margin-bottom: 10px; }
-      .score-section { width: 100%; justify-content: flex-end; }
-      .score-input { width: 50px; }
-      .submit-btn, .edit-btn { margin-left: 0; margin-top: 5px; width: 100%; }
-      .filter-btn { width: auto; margin: 3px; font-size: 0.8em; padding: 6px 10px; }
+      .match { flex-direction: column; align-items: stretch; padding: 20px 15px; }
+      .player-names-section { width: 100%; justify-content: center; margin-bottom: 20px; font-size: 1.4rem; }
+      .player-names { justify-content: center; flex-grow: 1; }
+      .team-color-indicator { width: 25px; height: 25px; }
+      .score-section { width: 100%; justify-content: center; margin-top: 20px; }
+      .score-input { width: 4rem; font-size: 1.5rem; padding: 5px; }
+      .submit-btn, .edit-btn { padding: 10px 15px; font-size: 1.1rem; }
+      .draw-button { margin: 0 auto 20px auto; width: fit-content; padding: 12px 18px; font-size: 1.2rem; }
+      .filter-buttons { justify-content: center; gap: 15px; }
+      .filter-btn { padding: 10px 15px; font-size: 1.1rem; }
+      table, th, td { font-size: 1rem; padding: 12px 10px; }
+      #reset-button { padding: 12px 25px; font-size: 1.1rem; margin: 25px auto 15px; }
     }
   </style>
 </head>
 <body>
   <header>TORNEO DI BILIARDINO</header>
+
   <div class="container">
-    <div id="player-and-status-filters"></div>
-    <div id="matches-container">
-      <h2>Partite</h2>
-      <div id="matches"></div>
-    </div>
     <div class="standings">
       <h2>Classifica</h2>
       <table>
         <thead>
           <tr>
-            <th>Pos.</th>
-            <th>Giocatore</th>
-            <th>Partite Giocate</th>
-            <th>Vinte</th>
-            <th>% Vittoria</th>
-            <th>Gol Fatti</th>
-            <th>Gol Subiti</th>
+            <th>Posizione</th><th>Giocatore</th><th>Giocate</th><th>Vinte</th><th>% Vittorie</th><th>Segnati</th><th>Subiti</th>
           </tr>
         </thead>
-        <tbody id="leaderboard">
-          </tbody>
+        <tbody id="leaderboard"></tbody>
       </table>
-      <button class="reset-btn" onclick="resetScores()">Azzera Torneo</button>
+    </div>
+    <div id="matches-container">
+      <h2>Partite</h2>
+      <div class="filter-buttons" id="player-and-status-filters"></div>
+      <div id="matches"></div>
     </div>
   </div>
+  <button id="reset-button" onclick="resetScores()">AZZERA PUNTEGGI TORNEO</button>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -162,18 +151,18 @@
         const a = savedScores[l];
         const isPlayed = a && (a.s1 !== undefined && a.s2 !== undefined) && (a.s1 !== 0 || a.s2 !== 0);
 
-        // Aggiunge la classe 'match-started' se ci sono assegnazioni di colore (anche se i punteggi non sono ancora stati inseriti)
-        // Questo assicura che il pulsante "Inizia Partita" sia nascosto e la sezione giocatori sia giustificata a sinistra.
+        // Add 'match-started' class if there are color assignments (even if scores are not yet entered)
+        // This ensures the "Inizia Partita" button is hidden and players section is justified left.
         if (a && (a.team1Color || a.s1 !== undefined)) s.classList.add("match-started");
 
         if (isPlayed) s.classList.add("played");
 
-        // Determina i colori finali o un colore di default vuoto se non impostato o la partita non è stata giocata
+        // Determine the final colors or default to an empty string if not set or match not played
         const team1FinalColorClass = a?.team1Color || '';
         const team2FinalColorClass = a?.team2Color || '';
 
-        // Imposta lo stile di visualizzazione per gli indicatori in base al fatto che la partita sia stata giocata
-        const indicatorDisplay = isPlayed ? 'none' : 'inline-block'; // Nascondi se la partita è stata giocata
+        // Set the display style for the indicators based on whether the match is played
+        const indicatorDisplay = isPlayed ? 'none' : 'inline-block'; // Hide if match is played
 
         s.innerHTML = `
           <div class="player-names-section">
@@ -219,22 +208,23 @@
       if (team1Indicator) team1Indicator.style.display = 'none';
       if (team2Indicator) team2Indicator.style.display = 'none';
 
+
       if (!isNaN(l) && !isNaN(s)) {
         if (l === 0 && s === 0) {
           if (confirm("Sei sicuro di voler resettare il punteggio a 0-0? Questo lo rimuoverà dalle partite giocate.")) {
-            // Rimuovi anche le assegnazioni di colore quando si resetta a 0-0
+            // Also remove color assignments when resetting to 0-0
             await scoresCollection.doc(String(c)).delete();
           } else {
             e.value = savedScores[c]?.s1 || "";
             t.value = savedScores[c]?.s2 || "";
-            // Se l'annullamento è stato annullato, mostra nuovamente gli indicatori se erano presenti
+            // If reset is cancelled, show the indicators again if they were there
             if (savedScores[c]?.team1Color) team1Indicator.style.display = 'inline-block';
             if (savedScores[c]?.team2Color) team2Indicator.style.display = 'inline-block';
           }
         } else {
           const scoreData = { s1: l, s2: s };
-          // Quando un punteggio viene inviato (e non è 0-0), assicurati che i dati del colore vengano rimossi
-          // Questo fa sì che gli indicatori scompaiano.
+          // When a score is submitted (and not 0-0), ensure color data is removed
+          // This makes the indicators disappear.
           scoreData.team1Color = firebase.firestore.FieldValue.delete();
           scoreData.team2Color = firebase.firestore.FieldValue.delete();
           await scoresCollection.doc(String(c)).set(scoreData, { merge: true });
@@ -298,7 +288,7 @@
       if (animationInterval) clearInterval(animationInterval);
       const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
       const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
-      // Assicurati che siano visibili quando inizia il sorteggio
+      // Ensure they are visible when the draw starts
       team1Indicator.style.display = 'inline-block';
       team2Indicator.style.display = 'inline-block';
 
@@ -326,8 +316,8 @@
         team1Color: `final-${team1Color}`,
         team2Color: `final-${team2Color}`
       }, { merge: true });
-      // Questo `set` attiverà il listener onSnapshot, che a sua volta chiamerà renderMatches
-      // e la classe `match-started` verrà aggiunta, nascondendo il pulsante di sorteggio.
+      // This `set` will trigger the onSnapshot listener, which will then call renderMatches
+      // and the `match-started` class will be added, hiding the draw button.
     }
 
     // 4. Listener di Firebase (si attiva al caricamento e a ogni modifica)
