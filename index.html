@@ -60,7 +60,7 @@
 <body>
   <header>TORNEO DI BILIARDINO</header>
 
-    <div class="container">
+  <div class="container">
     <div class="standings">
       <h2>Classifica</h2>
       <table>
@@ -84,28 +84,24 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
   <script>
-const firebaseConfig = {
-    apiKey: "AIzaSyAYjQZxyYDYrxuzYdUtsQnSlKrNFuvwfyo",
-    authDomain: "torneo-biliardino.firebaseapp.com",
-    projectId: "torneo-biliardino",
-    storageBucket: "torneo-biliardino.firebasestorage.app",
-    messagingSenderId: "592520260738",
-    appId: "1:592520260738:web:8496f057e057cee84d589b",
-    measurementId: "G-B6CLT4K3GL"
+    // 1. Inizializzazione di Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyAYjQZxyYDYrxuzYdUtsQnSlKrNFuvwfyo",
+        authDomain: "torneo-biliardino.firebaseapp.com",
+        projectId: "torneo-biliardino",
+        storageBucket: "torneo-biliardino.firebasestorage.app",
+        messagingSenderId: "592520260738",
+        appId: "1:592520260738:web:8496f057e057cee84d589b",
+        measurementId: "G-B6CLT4K3GL"
     };
-
-    // Inizializza Firebase
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const scoresCollection = db.collection("scores"); // 'scores' sarà il nome della nostra tabella nel database
-  </script>
+    const scoresCollection = db.collection("scores");
 
-  <script>
-    let savedScores = {}; // Questo oggetto conterrà una copia locale dei dati da Firebase
-
+    // 2. Variabili e costanti globali dell'applicazione
+    let savedScores = {}; // Conterrà una copia locale dei dati da Firebase
     const players = ["CHIARA", "FRENKIE", "IRE", "KLM", "LUCA", "TEO"];
     let stats = Object.fromEntries(players.map(p => [p, { points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0 }]));
-
     const matches = [
       ["CHIARA", "FRENKIE", "IRE", "KLM"], ["CHIARA", "FRENKIE", "IRE", "LUCA"], ["CHIARA", "FRENKIE", "IRE", "TEO"],
       ["CHIARA", "FRENKIE", "KLM", "LUCA"], ["CHIARA", "FRENKIE", "KLM", "TEO"], ["CHIARA", "FRENKIE", "LUCA", "TEO"],
@@ -123,28 +119,11 @@ const firebaseConfig = {
       ["FRENKIE", "TEO", "IRE", "KLM"], ["FRENKIE", "TEO", "IRE", "LUCA"], ["FRENKIE", "TEO", "KLM", "LUCA"],
       ["IRE", "KLM", "LUCA", "TEO"], ["IRE", "LUCA", "KLM", "TEO"], ["IRE", "TEO", "KLM", "LUCA"]
     ].map(([a1, a2, b1, b2]) => [[a1, a2], [b1, b2]]);
-
     const activePlayerFilters = new Set();
     let currentMatchStatusFilter = 'all';
 
-    // *** ASCOLTA I CAMBIAMENTI DAL DATABASE IN TEMPO REALE ***
-    scoresCollection.onSnapshot(snapshot => {
-        console.log("Dati aggiornati ricevuti da Firebase!");
-        const newScores = {};
-        snapshot.forEach(doc => {
-            // L'ID del documento è l'indice del match
-            newScores[doc.id] = doc.data();
-        });
-        savedScores = newScores;
-
-        // Ora che i dati sono aggiornati, ricalcola e ridisegna tutto
-        renderFilters();
-        renderMatches();
-        calculateAllStats();
-        filterMatches();
-    });
-
-    function renderFilters(){
+    // 3. Funzioni dell'applicazione
+    function renderFilters() {
       const filterContainer = document.getElementById("player-and-status-filters");
       filterContainer.innerHTML = "";
       players.forEach(p => {
@@ -164,20 +143,18 @@ const firebaseConfig = {
       });
     }
 
-    function renderMatches(){
+    function renderMatches() {
       const c = document.getElementById("matches");
       c.innerHTML = "";
-      matches.forEach(([e,t],l)=>{
-        const s = document.createElement("div"); s.className="match";
-        const a = savedScores[l]; // Usa l'indice del match come chiave
+      matches.forEach(([e, t], l) => {
+        const s = document.createElement("div"); s.className = "match";
+        const a = savedScores[l];
         const isPlayed = a && (a.s1 !== undefined && a.s2 !== undefined) && (a.s1 !== 0 || a.s2 !== 0);
         if (isPlayed || (a && a.team1Color)) s.classList.add("match-started");
         if (isPlayed) s.classList.add("played");
-        
         const team1FinalColorClass = a?.team1Color || '';
         const team2FinalColorClass = a?.team2Color || '';
-
-        s.innerHTML=`
+        s.innerHTML = `
           <div class="player-names-section">
             <button class="draw-button" onclick="startMatchDraw(${l})">Inizia Partita</button>
             <div class="player-names">
@@ -189,90 +166,79 @@ const firebaseConfig = {
             <input type="number" id="s1-${l}" class="score-input" min="0" max="10" value="${a?.s1 !== undefined ? a.s1 : ""}" ${a && a.s1 !== undefined ? "disabled" : ""}>
             -
             <input type="number" id="s2-${l}" class="score-input" min="0" max="10" value="${a?.s2 !== undefined ? a.s2 : ""}" ${a && a.s2 !== undefined ? "disabled" : ""}>
-            <button id="submit-btn-${l}" class="submit-btn" onclick="submitScore(${l})" style="display: ${a && a.s1 !== undefined ?"none":"inline-block"};">OK</button>
-            <button id="edit-btn-${l}" class="edit-btn" onclick="editScore(${l})" style="display: ${a && a.s1 !== undefined ?"inline-block":"none"};">Modifica</button>
+            <button id="submit-btn-${l}" class="submit-btn" onclick="submitScore(${l})" style="display: ${a && a.s1 !== undefined ? "none" : "inline-block"};">OK</button>
+            <button id="edit-btn-${l}" class="edit-btn" onclick="editScore(${l})" style="display: ${a && a.s1 !== undefined ? "inline-block" : "none"};">Modifica</button>
           </div>
         `;
         c.appendChild(s);
       });
     }
 
-    function editScore(c){
-        document.getElementById(`s1-${c}`).disabled=false;
-        document.getElementById(`s2-${c}`).disabled=false;
-        document.getElementById(`submit-btn-${c}`).style.display="inline-block";
-        document.getElementById(`edit-btn-${c}`).style.display="none";
+    function editScore(c) {
+      document.getElementById(`s1-${c}`).disabled = false;
+      document.getElementById(`s2-${c}`).disabled = false;
+      document.getElementById(`submit-btn-${c}`).style.display = "inline-block";
+      document.getElementById(`edit-btn-${c}`).style.display = "none";
     }
 
-    async function submitScore(c){
-      const e=document.getElementById(`s1-${c}`);
-      const t=document.getElementById(`s2-${c}`);
-      const l=parseInt(e.value);
-      const s=parseInt(t.value);
-
-      if(!isNaN(l)&&!isNaN(s)){
-        // Se il punteggio è 0-0, cancella il documento dal database
+    async function submitScore(c) {
+      const e = document.getElementById(`s1-${c}`);
+      const t = document.getElementById(`s2-${c}`);
+      const l = parseInt(e.value);
+      const s = parseInt(t.value);
+      if (!isNaN(l) && !isNaN(s)) {
         if (l === 0 && s === 0) {
-            if (confirm("Sei sicuro di voler resettare il punteggio a 0-0? Questo lo rimuoverà dalle partite giocate.")) {
-                await scoresCollection.doc(String(c)).delete();
-            } else { // Ripristina i valori vecchi se l'utente annulla
-                e.value = savedScores[c]?.s1 || "";
-                t.value = savedScores[c]?.s2 || "";
-            }
+          if (confirm("Sei sicuro di voler resettare il punteggio a 0-0? Questo lo rimuoverà dalle partite giocate.")) {
+            await scoresCollection.doc(String(c)).delete();
+          } else {
+            e.value = savedScores[c]?.s1 || "";
+            t.value = savedScores[c]?.s2 || "";
+          }
         } else {
-            // Altrimenti, salva o aggiorna il punteggio nel database
-            const scoreData = { s1: l, s2: s };
-            // Mantiene i colori se già presenti
-            if (savedScores[c]?.team1Color) scoreData.team1Color = savedScores[c].team1Color;
-            if (savedScores[c]?.team2Color) scoreData.team2Color = savedScores[c].team2Color;
-
-            await scoresCollection.doc(String(c)).set(scoreData, { merge: true });
+          const scoreData = { s1: l, s2: s };
+          if (savedScores[c]?.team1Color) scoreData.team1Color = savedScores[c].team1Color;
+          if (savedScores[c]?.team2Color) scoreData.team2Color = savedScores[c].team2Color;
+          await scoresCollection.doc(String(c)).set(scoreData, { merge: true });
         }
-        // Non c'è bisogno di aggiornare la UI qui, il listener `onSnapshot` lo farà automaticamente
       }
     }
 
-    function calculateAllStats(){
-        stats = Object.fromEntries(players.map(p => [p, { points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0 }]));
-        Object.values(savedScores).forEach(e => {
-            const matchIndex = Object.keys(savedScores).find(key => savedScores[key] === e);
-            if (!matchIndex) return;
-
-            const [t,l]=matches[matchIndex];
-            const s=e.s1; const a=e.s2;
-
-            if ((s !== undefined && a !== undefined) && (s !== 0 || a !== 0)) {
-                t.forEach(p => { stats[p].played++; stats[p].goalsFor += s; stats[p].goalsAgainst += a; });
-                l.forEach(p => { stats[p].played++; stats[p].goalsFor += a; stats[p].goalsAgainst += s; });
-                if (s > a) t.forEach(p => stats[p].won++);
-                else if (a > s) l.forEach(p => stats[p].won++);
-            }
-        });
-        updateLeaderboard();
+    function calculateAllStats() {
+      stats = Object.fromEntries(players.map(p => [p, { played: 0, won: 0, goalsFor: 0, goalsAgainst: 0 }]));
+      Object.entries(savedScores).forEach(([matchIndex, scoreData]) => {
+          const [team1, team2] = matches[parseInt(matchIndex, 10)];
+          const score1 = scoreData.s1;
+          const score2 = scoreData.s2;
+          if ((score1 !== undefined && score2 !== undefined) && (score1 !== 0 || score2 !== 0)) {
+              team1.forEach(p => { stats[p].played++; stats[p].goalsFor += score1; stats[p].goalsAgainst += score2; });
+              team2.forEach(p => { stats[p].played++; stats[p].goalsFor += score2; stats[p].goalsAgainst += score1; });
+              if (score1 > score2) team1.forEach(p => stats[p].won++);
+              else if (score2 > score1) team2.forEach(p => stats[p].won++);
+          }
+      });
+      updateLeaderboard();
     }
 
-    function updateLeaderboard(){
-        const c = document.getElementById("leaderboard"); c.innerHTML = "";
-        const sortedPlayers = Object.entries(stats).sort(([,a],[,b]) => (b.won/b.played||0) - (a.won/a.played||0) || b.won - a.won || (b.goalsFor-b.goalsAgainst) - (a.goalsFor-a.goalsAgainst));
-        sortedPlayers.forEach(([e,t],l)=>{
-            const s = t.played > 0 ? Math.round(t.won / t.played * 100) + "%" : "0%";
-            const a = document.createElement("tr");
-            if(l===0)a.classList.add("gold"); else if(l===1)a.classList.add("silver"); else if(l===2)a.classList.add("bronze");
-            a.innerHTML=`<td>${l+1}</td><td><strong>${e}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td><td><strong>${t.goalsFor}</strong></td><td>${t.goalsAgainst}</td>`;
-            c.appendChild(a);
-        });
+    function updateLeaderboard() {
+      const c = document.getElementById("leaderboard"); c.innerHTML = "";
+      const sortedPlayers = Object.entries(stats).sort(([, a], [, b]) => (b.won / b.played || 0) - (a.won / a.played || 0) || b.won - a.won || (b.goalsFor - b.goalsAgainst) - (a.goalsFor - a.goalsAgainst));
+      sortedPlayers.forEach(([e, t], l) => {
+        const s = t.played > 0 ? Math.round(t.won / t.played * 100) + "%" : "0%";
+        const a = document.createElement("tr");
+        if (l === 0) a.classList.add("gold"); else if (l === 1) a.classList.add("silver"); else if (l === 2) a.classList.add("bronze");
+        a.innerHTML = `<td>${l + 1}</td><td><strong>${e}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td><td><strong>${t.goalsFor}</strong></td><td>${t.goalsAgainst}</td>`;
+        c.appendChild(a);
+      });
     }
 
-    function filterMatches(){
+    function filterMatches() {
       document.querySelectorAll("#matches .match").forEach((matchElement, index) => {
         const [team1, team2] = matches[index];
         const allPlayers = [...team1, ...team2];
         const score = savedScores[index];
         const isPlayed = score && (score.s1 !== undefined && score.s2 !== undefined) && (score.s1 !== 0 || score.s2 !== 0);
-
         const playerFilterOk = activePlayerFilters.size === 0 || [...activePlayerFilters].every(p => allPlayers.includes(p));
         const statusFilterOk = currentMatchStatusFilter === 'all' || (currentMatchStatusFilter === 'played' && isPlayed) || (currentMatchStatusFilter === 'unplayed' && !isPlayed);
-
         matchElement.style.display = (playerFilterOk && statusFilterOk) ? "" : "none";
       });
     }
@@ -282,12 +248,9 @@ const firebaseConfig = {
         alert("Cancellazione in corso... Potrebbe richiedere qualche secondo.");
         const snapshot = await scoresCollection.get();
         const batch = db.batch();
-        snapshot.forEach(doc => {
-            batch.delete(doc.ref);
-        });
+        snapshot.forEach(doc => { batch.delete(doc.ref); });
         await batch.commit();
         alert("Torneo azzerato!");
-        // La UI si aggiornerà automaticamente grazie al listener
       }
     }
 
@@ -296,7 +259,6 @@ const firebaseConfig = {
       if (animationInterval) clearInterval(animationInterval);
       const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
       const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
-      
       let isRedForTeam1 = true; let animationCount = 0; const totalFlashes = 10;
       animationInterval = setInterval(() => {
         if (animationCount < totalFlashes) {
@@ -313,19 +275,31 @@ const firebaseConfig = {
     async function determineStartingTeam(matchIndex) {
       const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
       const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
-      
       let team1Color = (Math.random() < 0.5) ? 'blue' : 'red';
       let team2Color = (team1Color === 'blue') ? 'red' : 'blue';
-      
       team1Indicator.className = `team-color-indicator final-${team1Color}`;
       team2Indicator.className = `team-color-indicator final-${team2Color}`;
-
-      // Salva subito i colori su Firebase
       await scoresCollection.doc(String(matchIndex)).set({
-          team1Color: `final-${team1Color}`,
-          team2Color: `final-${team2Color}`
+        team1Color: `final-${team1Color}`,
+        team2Color: `final-${team2Color}`
       }, { merge: true });
     }
+
+    // 4. Listener di Firebase (si attiva al caricamento e a ogni modifica)
+    scoresCollection.onSnapshot(snapshot => {
+        console.log("Dati aggiornati ricevuti da Firebase!");
+        const newScores = {};
+        snapshot.forEach(doc => {
+            newScores[doc.id] = doc.data();
+        });
+        savedScores = newScores;
+        // Ad ogni aggiornamento, ridisegna tutta la UI con i dati freschi
+        renderFilters();
+        renderMatches();
+        calculateAllStats();
+        filterMatches();
+    });
+
   </script>
 </body>
 </html>
