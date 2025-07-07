@@ -23,7 +23,7 @@
     .filter-group.status-group { justify-content: flex-end; }
     .filter-btn { border: none; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease, padding 0.3s ease, border-radius 0.3s ease; white-space: nowrap; font-size: 0.8em; color: #555; border-radius: 5px; }
     .filter-btn.player-btn { background-color: #e0e0e0; padding: 5px 10px; }
-    .filter-btn.player-btn.active { background-color: #a0a0a0; color: white; }
+    .filter-btn.player-btn.active { background-color: #90ee90; color: white; } /* Verde chiaro quando attivo */
     .filter-btn.player-btn:hover { background-color: #b0b0b0; color: white; }
     .toggle-container { display: flex; align-items: center; gap: 8px; font-size: 0.8em; color: #555; }
     .toggle-switch { position: relative; display: inline-block; width: 48px; height: 28px; }
@@ -37,7 +37,6 @@
     th { background-color: #e7f5e7; color: #0e7546; }
     .submit-btn, .edit-btn { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
     .edit-btn { background-color: #66bb6a; }
-    /* Pulsante Reset torneo: rimosso, non più presente nell'HTML */
     .gold { background-color: #fff8dc !important; }
     .silver { background-color: #f5f5f5 !important; }
     .bronze { background-color: #fcebd0 !important; }
@@ -60,17 +59,16 @@
 
       /* Modifiche alla sezione Classifica per mobile */
       .standings {
-        padding: 10px; /* Ridotto il padding interno */
+        padding: 10px;
       }
       .standings h2 {
-        margin-top: 10px; /* Spazio superiore ridotto */
-        margin-bottom: 10px; /* Spazio inferiore ridotto */
+        margin-top: 10px;
+        margin-bottom: 10px;
       }
       table, th, td {
-        font-size: 0.8rem; /* Ulteriormente ridotto il font della tabella */
-        padding: 6px 3px; /* Ridotto il padding delle celle */
+        font-size: 0.8rem;
+        padding: 6px 3px;
       }
-
 
       /* Layout a 2 righe per ogni partita */
       .match {
@@ -79,7 +77,7 @@
         padding: 15px;
       }
       .player-names-section {
-        display: flex; /* Forza la riga unica */
+        display: flex;
         flex-direction: row;
         align-items: center;
         width: 100%;
@@ -95,8 +93,8 @@
 
       /* Pulsante Inizia Partita ridimensionato e allineato */
       .draw-button {
-        flex-shrink: 0; /* Evita che il pulsante si rimpicciolisca */
-        margin: 0 10px 0 0; /* Rimuove il margine verticale e aggiunge a destra */
+        flex-shrink: 0;
+        margin: 0 10px 0 0;
         padding: 8px 10px;
         font-size: 0.9rem;
       }
@@ -104,7 +102,7 @@
       /* Nomi giocatori ridimensionati */
       .player-names {
         font-size: 1rem;
-        flex-grow: 1; /* Occupa lo spazio rimanente */
+        flex-grow: 1;
         justify-content: center;
         text-align: center;
         line-height: 1.1;
@@ -156,7 +154,7 @@
       <table>
         <thead>
           <tr>
-            <th>Posizione</th><th>Giocatore</th><th>Giocate</th><th>Vinte</th><th>% Vittorie</th><th>Segnati</th><th>Subiti</th>
+            <th>Posizione</th><th>Giocatore</th><th>PUNTI</th><th>Giocate</th><th>Vinte</th><th>% Vittorie</th>
           </tr>
         </thead>
         <tbody id="leaderboard"></tbody>
@@ -171,6 +169,7 @@
       <div id="matches"></div>
     </div>
   </div>
+
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
@@ -351,7 +350,8 @@
         const s = t.played > 0 ? Math.round(t.won / t.played * 100) + "%" : "0%";
         const a = document.createElement("tr");
         if (l === 0) a.classList.add("gold"); else if (l === 1) a.classList.add("silver"); else if (l === 2) a.classList.add("bronze");
-        a.innerHTML = `<td>${l + 1}</td><td><strong>${e}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td><td><strong>${t.goalsFor}</strong></td><td>${t.goalsAgainst}</td>`;
+        // Ordine colonne: Posizione, Giocatore, PUNTI (ex Segnati), Giocate, Vinte, % Vittorie
+        a.innerHTML = `<td>${l + 1}</td><td><strong>${e}</strong></td><td><strong>${t.goalsFor}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td>`;
         c.appendChild(a);
       });
     }
@@ -368,8 +368,7 @@
       });
     }
 
-    // Funzione resetScores() è stata rimossa insieme al pulsante.
-    // Se volessi reintrodurla con protezione, andrebbe qui.
+    // Funzione resetScores() e il pulsante sono stati rimossi come richiesto.
 
     let animationInterval;
     function startMatchDraw(matchIndex) {
