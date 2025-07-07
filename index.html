@@ -35,8 +35,10 @@
     table { width: 100%; border-collapse: collapse; }
     th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
     th { background-color: #e7f5e7; color: #0e7546; }
-    .submit-btn, .edit-btn { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
+    .submit-btn, .edit-btn, #reset-button { background: #0e7546; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; }
     .edit-btn { background-color: #66bb6a; }
+    /* Pulsante Reset torneo: spostato qui per consistenza e styling specifico per mobile */
+    #reset-button { display: block; margin: 20px auto 10px; padding: 8px 15px; font-size: 0.8rem; background-color: #dc3545;}
     .gold { background-color: #fff8dc !important; }
     .silver { background-color: #f5f5f5 !important; }
     .bronze { background-color: #fcebd0 !important; }
@@ -92,7 +94,7 @@
         flex-grow: 1; /* Occupa lo spazio rimanente */
         justify-content: center;
         text-align: center;
-        line-height: 1.2;
+        line-height: 1.2; /* Migliora l'allineamento verticale con il pallino */
       }
       .team-color-indicator { width: 12px; height: 12px; }
 
@@ -135,6 +137,13 @@
         font-size: 0.85rem;
         padding: 8px 4px;
       }
+
+      /* Pulsante reset torneo adattato al mobile */
+      #reset-button {
+          padding: 10px 20px;
+          font-size: 1rem;
+          margin: 20px auto;
+      }
     }
   </style>
 </head>
@@ -162,6 +171,7 @@
       <div id="matches"></div>
     </div>
   </div>
+  <button id="reset-button" onclick="resetScores()">AZZERA PUNTEGGI TORNEO</button>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
@@ -358,6 +368,17 @@
         const statusFilterOk = (currentMatchStatusFilter === 'played' && isPlayed) || (currentMatchStatusFilter === 'unplayed' && !isPlayed);
         matchElement.style.display = (playerFilterOk && statusFilterOk) ? "" : "none";
       });
+    }
+
+    async function resetScores() {
+      if (confirm("Sei SICURO di voler azzerare TUTTI i punteggi dell'intero torneo? Questa azione è IRREVERSIBILE.")) {
+        alert("Cancellazione in corso... Potrebbe richiedere qualche secondo.");
+        const snapshot = await scoresCollection.get();
+        const batch = db.batch();
+        snapshot.forEach(doc => { batch.delete(doc.ref); });
+        await batch.commit();
+        alert("Torneo azzerato!");
+      }
     }
 
     let animationInterval;
