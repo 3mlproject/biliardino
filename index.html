@@ -23,7 +23,7 @@
     .filter-group.status-group { justify-content: flex-end; }
     .filter-btn { border: none; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease, padding 0.3s ease, border-radius 0.3s ease; white-space: nowrap; font-size: 0.8em; color: #555; border-radius: 5px; }
     .filter-btn.player-btn { background-color: #e0e0e0; padding: 5px 10px; }
-    .filter-btn.player-btn.active { background-color: #90ee90; color: white; } /* Verde chiaro quando attivo */
+    .filter-btn.player-btn.active { background-color: #e7f5e7; color: #0e7546; } /* Verde chiaro come l'intestazione tabella */
     .filter-btn.player-btn:hover { background-color: #b0b0b0; color: white; }
     .toggle-container { display: flex; align-items: center; gap: 8px; font-size: 0.8em; color: #555; }
     .toggle-switch { position: relative; display: inline-block; width: 48px; height: 28px; }
@@ -367,8 +367,6 @@
         matchElement.style.display = (playerFilterOk && statusFilterOk) ? "" : "none";
       });
     }
-
-    // Funzione resetScores() e il pulsante sono stati rimossi come richiesto.
 
     let animationInterval;
     function startMatchDraw(matchIndex) {
