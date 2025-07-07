@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>TORNEO DI BILIARDINO</title>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { font-family: Arial, sans-serif; background-color: #f1f5e3; margin: 0; padding: 0; }
     header { background-color: #0e7546; color: white; text-align: center; padding: 1.5rem 0; font-family: 'Bebas Neue', sans-serif; font-size: 4.5rem; letter-spacing: 2px; }
@@ -49,22 +50,70 @@
     .match.match-started .draw-button { display: none; }
     .match.match-started .player-names-section { justify-content: flex-start; }
     .match.match-started .player-names { flex-grow: 1; }
+
+    /* === REGOLE PER MOBILE PIÙ DECISIVE === */
     @media (max-width: 600px) {
-      header { font-size: 3.5rem; padding: 1.5rem 0.5rem; }
+      header { font-size: 3rem; padding: 1rem 0.5rem; }
       h2 { font-size: 2rem; }
-      .container { flex-direction: column; padding: 10px; }
-      .match { flex-direction: column; align-items: stretch; padding: 15px; }
-      .player-names-section { width: 100%; justify-content: center; margin-bottom: 15px; font-size: 1.4rem; min-width: unset; }
-      .player-names { justify-content: center; flex-grow: 1; gap: 5px; }
-      .team-color-indicator { width: 20px; height: 20px; }
-      .score-section { width: 100%; justify-content: center; margin-top: 0; gap: 8px; }
-      .score-input { width: 4rem; font-size: 1.5rem; padding: 5px; }
-      .submit-btn, .edit-btn { padding: 10px 15px; font-size: 1.1rem; }
-      .draw-button { margin: 0 auto 15px auto; padding: 12px 18px; font-size: 1.1rem; }
-      .filter-section { flex-direction: column; gap: 15px; }
+      .container { flex-direction: column; padding: 5px; }
+      .match { flex-direction: column; align-items: stretch; padding: 20px 15px; }
+
+      /* Filtri più grandi e leggibili */
+      .filter-section { flex-direction: column; gap: 20px; }
       .filter-group { flex-direction: row; justify-content: center; width: 100%; flex-wrap: wrap; }
-      .filter-btn { padding: 8px 12px; font-size: 1.0rem; }
-      table, th, td { font-size: 0.9rem; padding: 8px 5px; }
+      .filter-btn {
+        padding: 10px 14px; /* AUMENTATO */
+        font-size: 1.1rem;   /* AUMENTATO */
+      }
+      .toggle-container {
+        gap: 10px;
+        font-size: 1.1rem; /* AUMENTATO */
+      }
+      .toggle-switch { /* RESO PIÙ GRANDE */
+        width: 60px;
+        height: 34px;
+      }
+      .slider:before { /* RESO PIÙ GRANDE */
+        height: 26px;
+        width: 26px;
+      }
+      input:checked + .slider:before { /* SPOSTATO DI PIÙ */
+        transform: translateX(26px);
+      }
+
+      /* Testi e spaziatura delle partite migliorati */
+      .player-names-section {
+        width: 100%;
+        justify-content: center;
+        margin-bottom: 20px; /* Più spazio sotto i nomi */
+        font-size: 1.6rem; /* AUMENTATO DRASTICAMENTE */
+        min-width: unset;
+        line-height: 1.4; /* Migliora la spaziatura verticale del testo */
+      }
+      .player-names { justify-content: center; flex-grow: 1; gap: 5px; }
+      .team-color-indicator { width: 18px; height: 18px; }
+      .score-section { width: 100%; justify-content: center; margin-top: 0; gap: 10px; }
+      .score-input {
+        width: 4.5rem;     /* AUMENTATO */
+        font-size: 1.8rem; /* AUMENTATO */
+        padding: 8px 5px;
+      }
+      .submit-btn, .edit-btn {
+        padding: 12px 18px; /* AUMENTATO */
+        font-size: 1.2rem;  /* AUMENTATO */
+      }
+      .draw-button {
+        margin: 0 auto 20px auto;
+        padding: 14px 20px; /* AUMENTATO */
+        font-size: 1.2rem;
+      }
+
+      /* Tabella classifica più leggibile */
+      table, th, td {
+        font-size: 1.1rem;    /* AUMENTATO */
+        padding: 12px 8px;  /* AUMENTATO */
+        white-space: nowrap; /* Evita che il testo vada a capo */
+      }
     }
   </style>
 </head>
