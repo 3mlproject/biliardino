@@ -154,7 +154,7 @@
       <table>
         <thead>
           <tr>
-            <th>Posizione</th><th>Giocatore</th><th>PUNTI</th><th>Giocate</th><th>Vinte</th><th>% Vittorie</th>
+            <th>Posizione</th><th>Giocatore</th><th>Punti</th><th>Giocate</th><th>Vinte</th><th>% Vittorie</th>
           </tr>
         </thead>
         <tbody id="leaderboard"></tbody>
@@ -350,7 +350,7 @@
         const s = t.played > 0 ? Math.round(t.won / t.played * 100) + "%" : "0%";
         const a = document.createElement("tr");
         if (l === 0) a.classList.add("gold"); else if (l === 1) a.classList.add("silver"); else if (l === 2) a.classList.add("bronze");
-        // Ordine colonne: Posizione, Giocatore, PUNTI (ex Segnati), Giocate, Vinte, % Vittorie
+        // Ordine colonne: Posizione, Giocatore, Punti, Giocate, Vinte, % Vittorie
         a.innerHTML = `<td>${l + 1}</td><td><strong>${e}</strong></td><td><strong>${t.goalsFor}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td>`;
         c.appendChild(a);
       });
