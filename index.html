@@ -23,7 +23,7 @@
     .filter-group.status-group { justify-content: flex-end; }
     .filter-btn { border: none; cursor: pointer; transition: background-color 0.3s ease, color 0.3s ease, padding 0.3s ease, border-radius 0.3s ease; white-space: nowrap; font-size: 0.8em; color: #555; border-radius: 5px; }
     .filter-btn.player-btn { background-color: #e0e0e0; padding: 5px 10px; }
-    .filter-btn.player-btn.active { background-color: #e7f5e7; color: #0e7546; } /* Verde chiaro come l'intestazione tabella */
+    .filter-btn.player-btn.active { background-color: #e7f5e7; color: #0e7546; }
     .filter-btn.player-btn:hover { background-color: #b0b0b0; color: white; }
     .toggle-container { display: flex; align-items: center; gap: 8px; font-size: 0.8em; color: #555; }
     .toggle-switch { position: relative; display: inline-block; width: 48px; height: 28px; }
@@ -56,92 +56,24 @@
       header { font-size: 2.8rem; padding: 1rem 0.5rem; }
       h2 { font-size: 1.6rem; }
       .container { flex-direction: column; padding: 10px; }
-
-      /* Modifiche alla sezione Classifica per mobile */
-      .standings {
-        padding: 10px;
-      }
-      .standings h2 {
-        margin-top: 10px;
-        margin-bottom: 10px;
-      }
-      table, th, td {
-        font-size: 0.8rem;
-        padding: 6px 3px;
-      }
-
-      /* Layout a 2 righe per ogni partita */
-      .match {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 15px;
-      }
-      .player-names-section {
-        display: flex;
-        flex-direction: row;
-        align-items: center;
-        width: 100%;
-        margin-bottom: 15px;
-        min-width: unset;
-      }
-      .score-section {
-        width: 100%;
-        justify-content: center;
-        margin-top: 0;
-        gap: 8px;
-      }
-
-      /* Pulsante Inizia Partita ridimensionato e allineato */
-      .draw-button {
-        flex-shrink: 0;
-        margin: 0 10px 0 0;
-        padding: 8px 10px;
-        font-size: 0.9rem;
-      }
-
-      /* Nomi giocatori ridimensionati */
-      .player-names {
-        font-size: 1rem;
-        flex-grow: 1;
-        justify-content: center;
-        text-align: center;
-        line-height: 1.1;
-      }
+      .standings { padding: 10px; }
+      .standings h2 { margin-top: 10px; margin-bottom: 10px; }
+      table, th, td { font-size: 0.8rem; padding: 6px 3px; }
+      .match { flex-direction: column; align-items: stretch; padding: 15px; }
+      .player-names-section { display: flex; flex-direction: row; align-items: center; width: 100%; margin-bottom: 15px; min-width: unset; }
+      .score-section { width: 100%; justify-content: center; margin-top: 0; gap: 8px; }
+      .draw-button { flex-shrink: 0; margin: 0 10px 0 0; padding: 8px 10px; font-size: 0.9rem; }
+      .player-names { font-size: 1rem; flex-grow: 1; justify-content: center; text-align: center; line-height: 1.1; }
       .team-color-indicator { width: 12px; height: 12px; }
-
-      /* Input e pulsanti punteggio ridimensionati */
-      .score-input {
-        width: 3.8rem;
-        font-size: 1.4rem;
-        padding: 5px;
-      }
-      .submit-btn, .edit-btn {
-        padding: 8px 14px;
-        font-size: 1rem;
-      }
-
-      /* Filtri di dimensioni contenute */
+      .score-input { width: 3.8rem; font-size: 1.4rem; padding: 5px; }
+      .submit-btn, .edit-btn { padding: 8px 14px; font-size: 1rem; }
       .filter-section { flex-direction: column; gap: 15px; }
       .filter-group { flex-direction: row; justify-content: center; width: 100%; flex-wrap: wrap; }
-      .filter-btn {
-        padding: 8px 10px;
-        font-size: 0.9rem;
-      }
-      .toggle-container {
-        gap: 8px;
-        font-size: 0.9rem;
-      }
-      .toggle-switch {
-        width: 48px;
-        height: 28px;
-      }
-      .slider:before {
-        height: 20px;
-        width: 20px;
-      }
-      input:checked + .slider:before {
-        transform: translateX(20px);
-      }
+      .filter-btn { padding: 8px 10px; font-size: 0.9rem; }
+      .toggle-container { gap: 8px; font-size: 0.9rem; }
+      .toggle-switch { width: 48px; height: 28px; }
+      .slider:before { height: 20px; width: 20px; }
+      input:checked + .slider:before { transform: translateX(20px); }
     }
   </style>
 </head>
@@ -213,6 +145,27 @@
     let currentMatchStatusFilter = 'unplayed';
 
     // 3. Funzioni dell'applicazione
+
+    /**
+     * NUOVA FUNZIONE: Controlla la password prima di ogni modifica.
+     * @returns {boolean} - True se la password è corretta, altrimenti false.
+     */
+    function checkPassword() {
+        const password = "Broccolo";
+        const input = prompt("Per modificare, inserisci la password:");
+
+        if (input === null) { // L'utente ha cliccato "Annulla"
+            return false;
+        }
+
+        if (input === password) {
+            return true;
+        } else {
+            alert("Password errata!");
+            return false;
+        }
+    }
+
     function renderFilters() {
       const playerFilterContainer = document.getElementById("player-filters");
       const statusFilterContainer = document.getElementById("status-filters");
@@ -278,26 +231,38 @@
             <input type="number" id="s1-${l}" class="score-input" min="0" max="10" value="${a?.s1 !== undefined ? a.s1 : ""}" ${a && a.s1 !== undefined ? "disabled" : ""}>
             -
             <input type="number" id="s2-${l}" class="score-input" min="0" max="10" value="${a?.s2 !== undefined ? a.s2 : ""}" ${a && a.s2 !== undefined ? "disabled" : ""}>
-            <button id="submit-btn-${l}" class="submit-btn" onclick="submitScore(${l})" style="display: ${a && a.s1 !== undefined ? "none" : "inline-block"};">OK</button>
-            <button id="edit-btn-${l}" class="edit-btn" onclick="editScore(${l})" style="display: ${a && a.s1 !== undefined ? "inline-block" : "none"};">Modifica</button>
+            <button id="submit-btn-${l}" class="submit-btn" onclick="submitScore(${l})">OK</button>
+            <button id="edit-btn-${l}" class="edit-btn" onclick="editScore(${l})" style="display: none;">Modifica</button>
           </div>
         `;
-        c.appendChild(s);
+        // Inizialmente nascondiamo il pulsante Modifica, verrà gestito dalla logica
+        const matchElement = document.createElement('div');
+        matchElement.innerHTML = s.innerHTML;
+        const score1Input = matchElement.querySelector(`#s1-${l}`);
+        const editBtn = matchElement.querySelector(`#edit-btn-${l}`);
+        if(a && a.s1 !== undefined) {
+          editBtn.style.display = 'inline-block';
+        }
+
+        c.appendChild(matchElement);
       });
     }
 
     function editScore(c) {
+      // La protezione con password è ora in submitScore,
+      // quindi l'edit si limita ad abilitare i campi.
       document.getElementById(`s1-${c}`).disabled = false;
       document.getElementById(`s2-${c}`).disabled = false;
       document.getElementById(`submit-btn-${c}`).style.display = "inline-block";
       document.getElementById(`edit-btn-${c}`).style.display = "none";
-      const team1Indicator = document.getElementById(`team1-indicator-${c}`);
-      const team2Indicator = document.getElementById(`team2-indicator-${c}`);
-      if (team1Indicator) team1Indicator.style.display = 'inline-block';
-      if (team2Indicator) team2Indicator.style.display = 'inline-block';
     }
 
     async function submitScore(c) {
+      // Inserito controllo password
+      if (!checkPassword()) {
+          return;
+      }
+
       const e = document.getElementById(`s1-${c}`);
       const t = document.getElementById(`s2-${c}`);
       const l = parseInt(e.value);
@@ -350,7 +315,6 @@
         const s = t.played > 0 ? Math.round(t.won / t.played * 100) + "%" : "0%";
         const a = document.createElement("tr");
         if (l === 0) a.classList.add("gold"); else if (l === 1) a.classList.add("silver"); else if (l === 2) a.classList.add("bronze");
-        // Ordine colonne: Posizione, Giocatore, Punti, Giocate, Vinte, % Vittorie
         a.innerHTML = `<td>${l + 1}</td><td><strong>${e}</strong></td><td><strong>${t.goalsFor}</strong></td><td>${t.played}</td><td>${t.won}</td><td>${s}</td>`;
         c.appendChild(a);
       });
@@ -370,6 +334,11 @@
 
     let animationInterval;
     function startMatchDraw(matchIndex) {
+      // Inserito controllo password
+      if (!checkPassword()) {
+          return;
+      }
+
       if (animationInterval) clearInterval(animationInterval);
       const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
       const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
