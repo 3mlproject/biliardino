@@ -120,7 +120,7 @@
     const db = firebase.firestore();
     const scoresCollection = db.collection("scores");
 
-    // 2. Variabili e costanti globali dell'applicazione
+    // 2. Variabili e costanti globali
     let savedScores = {};
     const players = ["CHIARA", "FRENKIE", "IRE", "KLM", "LUCA", "TEO"];
     let stats = Object.fromEntries(players.map(p => [p, { points: 0, played: 0, won: 0, goalsFor: 0, goalsAgainst: 0 }]));
@@ -145,25 +145,13 @@
     let currentMatchStatusFilter = 'unplayed';
 
     // 3. Funzioni dell'applicazione
-
-    /**
-     * NUOVA FUNZIONE: Controlla la password prima di ogni modifica.
-     * @returns {boolean} - True se la password è corretta, altrimenti false.
-     */
     function checkPassword() {
-        const password = "Broccolo";
-        const input = prompt("Per modificare, inserisci la password:");
-
-        if (input === null) { // L'utente ha cliccato "Annulla"
-            return false;
-        }
-
-        if (input === password) {
-            return true;
-        } else {
-            alert("Password errata!");
-            return false;
-        }
+      const password = "Broccolo";
+      const input = prompt("Per modificare, inserisci la password:");
+      if (input === null) { return false; }
+      if (input === password) { return true; }
+      alert("Password errata!");
+      return false;
     }
 
     function renderFilters() {
@@ -195,62 +183,64 @@
 
       const toggleCheckbox = document.getElementById('match-status-toggle');
       toggleCheckbox.checked = (currentMatchStatusFilter === 'played');
-
       toggleCheckbox.onchange = () => {
         currentMatchStatusFilter = toggleCheckbox.checked ? 'played' : 'unplayed';
         filterMatches();
       };
     }
 
+    /**
+     * CORRETTO: Funzione per disegnare le partite.
+     * Risolve il bug che non applicava lo stile ".played".
+     */
     function renderMatches() {
-      const c = document.getElementById("matches");
-      c.innerHTML = "";
-      matches.forEach(([e, t], l) => {
-        const s = document.createElement("div"); s.className = "match";
-        const a = savedScores[l];
-        const isPlayed = a && (a.s1 !== undefined && a.s2 !== undefined) && (a.s1 !== 0 || a.s2 !== 0);
+        const container = document.getElementById("matches");
+        container.innerHTML = "";
+        matches.forEach(([team1, team2], index) => {
+            const matchDiv = document.createElement("div");
+            matchDiv.className = "match";
 
-        if (a && (a.team1Color || a.s1 !== undefined)) s.classList.add("match-started");
+            const scoreData = savedScores[index];
+            const isPlayed = scoreData && (scoreData.s1 !== undefined && scoreData.s2 !== undefined);
 
-        if (isPlayed) s.classList.add("played");
+            if (isPlayed) {
+                matchDiv.classList.add("played");
+            }
+            if (scoreData && (scoreData.team1Color || scoreData.s1 !== undefined)) {
+                matchDiv.classList.add("match-started");
+            }
 
-        const team1FinalColorClass = a?.team1Color || '';
-        const team2FinalColorClass = a?.team2Color || '';
+            const team1ColorClass = scoreData?.team1Color || '';
+            const team2ColorClass = scoreData?.team2Color || '';
+            const indicatorDisplay = isPlayed ? 'none' : 'inline-block';
+            const score1Value = scoreData?.s1 !== undefined ? scoreData.s1 : "";
+            const score2Value = scoreData?.s2 !== undefined ? scoreData.s2 : "";
+            const areInputsDisabled = isPlayed;
+            const submitBtnDisplay = areInputsDisabled ? 'none' : 'inline-block';
+            const editBtnDisplay = areInputsDisabled ? 'inline-block' : 'none';
 
-        const indicatorDisplay = isPlayed ? 'none' : 'inline-block';
-
-        s.innerHTML = `
-          <div class="player-names-section">
-            <button class="draw-button" onclick="startMatchDraw(${l})">Inizia Partita</button>
-            <div class="player-names">
-              <span id="team1-indicator-${l}" class="team-color-indicator ${team1FinalColorClass}" style="display: ${indicatorDisplay};"></span> ${e.join(" & ")} vs
-              <span id="team2-indicator-${l}" class="team-color-indicator ${team2FinalColorClass}" style="display: ${indicatorDisplay};"></span> ${t.join(" & ")}
-            </div>
-          </div>
-          <div class="score-section">
-            <input type="number" id="s1-${l}" class="score-input" min="0" max="10" value="${a?.s1 !== undefined ? a.s1 : ""}" ${a && a.s1 !== undefined ? "disabled" : ""}>
-            -
-            <input type="number" id="s2-${l}" class="score-input" min="0" max="10" value="${a?.s2 !== undefined ? a.s2 : ""}" ${a && a.s2 !== undefined ? "disabled" : ""}>
-            <button id="submit-btn-${l}" class="submit-btn" onclick="submitScore(${l})">OK</button>
-            <button id="edit-btn-${l}" class="edit-btn" onclick="editScore(${l})" style="display: none;">Modifica</button>
-          </div>
-        `;
-        // Inizialmente nascondiamo il pulsante Modifica, verrà gestito dalla logica
-        const matchElement = document.createElement('div');
-        matchElement.innerHTML = s.innerHTML;
-        const score1Input = matchElement.querySelector(`#s1-${l}`);
-        const editBtn = matchElement.querySelector(`#edit-btn-${l}`);
-        if(a && a.s1 !== undefined) {
-          editBtn.style.display = 'inline-block';
-        }
-
-        c.appendChild(matchElement);
-      });
+            matchDiv.innerHTML = `
+                <div class="player-names-section">
+                    <button class="draw-button" onclick="startMatchDraw(${index})">Inizia Partita</button>
+                    <div class="player-names">
+                        <span id="team1-indicator-${index}" class="team-color-indicator ${team1ColorClass}" style="display: ${indicatorDisplay};"></span> ${team1.join(" & ")} vs
+                        <span id="team2-indicator-${index}" class="team-color-indicator ${team2ColorClass}" style="display: ${indicatorDisplay};"></span> ${team2.join(" & ")}
+                    </div>
+                </div>
+                <div class="score-section">
+                    <input type="number" id="s1-${index}" class="score-input" min="0" max="10" value="${score1Value}" ${areInputsDisabled ? "disabled" : ""}>
+                    -
+                    <input type="number" id="s2-${index}" class="score-input" min="0" max="10" value="${score2Value}" ${areInputsDisabled ? "disabled" : ""}>
+                    <button id="submit-btn-${index}" class="submit-btn" onclick="submitScore(${index})" style="display: ${submitBtnDisplay};">OK</button>
+                    <button id="edit-btn-${index}" class="edit-btn" onclick="editScore(${index})" style="display: ${editBtnDisplay};">Modifica</button>
+                </div>
+            `;
+            container.appendChild(matchDiv);
+        });
     }
 
     function editScore(c) {
-      // La protezione con password è ora in submitScore,
-      // quindi l'edit si limita ad abilitare i campi.
+      if (!checkPassword()) return; // Chiede password per modificare
       document.getElementById(`s1-${c}`).disabled = false;
       document.getElementById(`s2-${c}`).disabled = false;
       document.getElementById(`submit-btn-${c}`).style.display = "inline-block";
@@ -258,9 +248,10 @@
     }
 
     async function submitScore(c) {
-      // Inserito controllo password
-      if (!checkPassword()) {
-          return;
+      // La password è già richiesta su editScore, ma la manteniamo anche qui
+      // per quando si inserisce un punteggio per la prima volta.
+      if (document.getElementById(`s1-${c}`).disabled === false) {
+          if (!checkPassword()) return;
       }
 
       const e = document.getElementById(`s1-${c}`);
@@ -268,27 +259,12 @@
       const l = parseInt(e.value);
       const s = parseInt(t.value);
 
-      const team1Indicator = document.getElementById(`team1-indicator-${c}`);
-      const team2Indicator = document.getElementById(`team2-indicator-${c}`);
-      if (team1Indicator) team1Indicator.style.display = 'none';
-      if (team2Indicator) team2Indicator.style.display = 'none';
-
       if (!isNaN(l) && !isNaN(s)) {
-        if (l === 0 && s === 0) {
-          if (confirm("Sei sicuro di voler resettare il punteggio a 0-0? Questo lo rimuoverà dalle partite giocate.")) {
-            await scoresCollection.doc(String(c)).delete();
-          } else {
-            e.value = savedScores[c]?.s1 || "";
-            t.value = savedScores[c]?.s2 || "";
-            if (savedScores[c]?.team1Color) team1Indicator.style.display = 'inline-block';
-            if (savedScores[c]?.team2Color) team2Indicator.style.display = 'inline-block';
-          }
-        } else {
           const scoreData = { s1: l, s2: s };
-          scoreData.team1Color = firebase.firestore.FieldValue.delete();
-          scoreData.team2Color = firebase.firestore.FieldValue.delete();
+          // Rimuove i dati temporanei dei colori una volta salvato il punteggio
+          if(savedScores[c]?.team1Color) scoreData.team1Color = firebase.firestore.FieldValue.delete();
+          if(savedScores[c]?.team2Color) scoreData.team2Color = firebase.firestore.FieldValue.delete();
           await scoresCollection.doc(String(c)).set(scoreData, { merge: true });
-        }
       }
     }
 
@@ -298,7 +274,7 @@
           const [team1, team2] = matches[parseInt(matchIndex, 10)];
           const score1 = scoreData.s1;
           const score2 = scoreData.s2;
-          if ((score1 !== undefined && score2 !== undefined) && (score1 !== 0 || score2 !== 0)) {
+          if (score1 !== undefined && score2 !== undefined) {
               team1.forEach(p => { stats[p].played++; stats[p].goalsFor += score1; stats[p].goalsAgainst += score2; });
               team2.forEach(p => { stats[p].played++; stats[p].goalsFor += score2; stats[p].goalsAgainst += score1; });
               if (score1 > score2) team1.forEach(p => stats[p].won++);
@@ -322,10 +298,9 @@
 
     function filterMatches() {
       document.querySelectorAll("#matches .match").forEach((matchElement, index) => {
-        const [team1, team2] = matches[index];
-        const allPlayers = [...team1, ...team2];
+        const allPlayers = [...matches[index][0], ...matches[index][1]];
         const score = savedScores[index];
-        const isPlayed = score && (score.s1 !== undefined && score.s2 !== undefined) && (score.s1 !== 0 || score.s2 !== 0);
+        const isPlayed = score && score.s1 !== undefined && score.s2 !== undefined;
         const playerFilterOk = activePlayerFilters.size === 0 || [...activePlayerFilters].every(p => allPlayers.includes(p));
         const statusFilterOk = (currentMatchStatusFilter === 'played' && isPlayed) || (currentMatchStatusFilter === 'unplayed' && !isPlayed);
         matchElement.style.display = (playerFilterOk && statusFilterOk) ? "" : "none";
@@ -334,11 +309,7 @@
 
     let animationInterval;
     function startMatchDraw(matchIndex) {
-      // Inserito controllo password
-      if (!checkPassword()) {
-          return;
-      }
-
+      // Password rimossa da qui
       if (animationInterval) clearInterval(animationInterval);
       const team1Indicator = document.getElementById(`team1-indicator-${matchIndex}`);
       const team2Indicator = document.getElementById(`team2-indicator-${matchIndex}`);
@@ -371,9 +342,9 @@
       }, { merge: true });
     }
 
-    // 4. Listener di Firebase (si attiva al caricamento e a ogni modifica)
+    // Listener di Firebase
     scoresCollection.onSnapshot(snapshot => {
-        console.log("Dati aggiornati ricevuti da Firebase!");
+        console.log("Dati aggiornati da Firebase!");
         const newScores = {};
         snapshot.forEach(doc => {
             newScores[doc.id] = doc.data();
@@ -384,7 +355,6 @@
         calculateAllStats();
         filterMatches();
     });
-
   </script>
 </body>
 </html>
